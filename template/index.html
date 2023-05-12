@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Timekeeping System</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.14.0/css/bootstrap-select.min.css">
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <style>
+      table.data {
+        border-collapse: collapse;
+        border-spacing: 0;
+        width: 100%;
+        border: 1px solid #ddd;
+      }
+
+      table.data th, table.data td {
+        text-align: left;
+        padding: 8px;
+      }
+
+      table.data tr:nth-child(even){background-color: #f2f2f2}
+
+      <style>
+    .sticky-header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: 999;
+        background-color: #fff; /* adjust to your header color */
+        box-shadow: 0 2px 5px rgba(0,0,0,.2); /* optional: add a shadow to the header */
+    }
+    .sticky-header {
+    position: sticky;
+    top: 0;
+    z-index: 999;
+    background-color: #fff; /* replace with your desired background color */
+    }
+    /* Add sticky header to table */
+        #table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            background-color: #fff;
+        }
+        .highlight {
+        background-color: yellow;
+        }
+    </style>
+
+</head>
+<body>
+    <h1>Timekeeping System</h1>
+    <div style="float: left; margin-left: 20px">
+        <br>
+        <form method="post" action="/submit" onsubmit="return validateForm()">
+
+            <!--employee code-->
+            <label for="employee_code">Employee Code:</label>
+            <input type="text" name="employee_code" id="employee_code" value="{{ request.form.get('employee_code', '') }}" oninput="lookup_employee()"><br><br>
+
+            <!--employee name-->
+            <label for="employee_name">Employee Name:</label>
+            <input type="text" name="employee_name" id="employee_name" value="{{ request.form.get('employee_name', '') }}" required><br><br>
+
+            <!--Date of transaction-->
+            <label for="start_date">Date of Transaction:</label>
+            <input type="date" name="start_date" id="start_date" value="{{ modified_date_str }}"  required><br><br>
+
+            <!--Working Day-->
+            <label for="work_descript">Working Day:</label>
+            <select name="work_descript" id="work_descript" required>
+                <option value="Regular Day">Regular Day</option>
+                <option value="Special Holiday">Special holiday</option>
+                <option value="Legal Holiday">Legal holiday</option>
+                <option value="Leave">Leave</option>
+                <option value="Restday">Restday</option>
+                <option value="Absent">Absent</option>
+            </select>
+
+            <br><br>
+
+            <!--Time in-->
+            <label for="time_in"> Time In:</label>
+            <input type="time" name="time_in" id="time_in" value="{{ request.form.get('time_in', '') }}" required><br><br>
+            <!--Time out-->
+            <label for="time_out"> Time Out:</label>
+            <input type="time" name="time_out" id="time_out" value="{{ request.form.get('time_out', '') }}" required><br><br>
+            <!--Actual Time in-->
+            <label for="actual_time_in">Actual Time In:</label>
+            <input type="time" name="actual_time_in" id="actual_time_in" value="{{ request.form.get('actual_time_in', '') }}" required><br><br>
+            <!--Actual Time out-->
+            <label for="actual_time_out">Actual Time Out:</label>
+            <input type="time" name="actual_time_out" id="actual_time_out" value="{{ request.form.get('actual_time_out', '') }}" required><br><br>
+
+
+            <input type="submit" value="Submit">
+            <br><br>
+        </form>
+    </div>
+    <div style="float: right;">
+        <h3>Delete Data</h3>
+        <form method="post" action="/delete">
+            <label for="delete_employee_code">Delete Row</label>
+            <input type="text" name="delete_employee_code" id="delete_employee_code" placeholder="Employee Code">
+            <input type="date" name="delete_date" id="delete_date" placeholder="Date">
+            <button type="submit">Delete Row</button><br>
+            <p style="margin-left: 125.5px">Case Sensitive</p>
+        </form>
+
+        <br><br>
+
+        <h3>Download Summary</h3>
+        <p>Click the button to download the CSV file:</p>
+        <a href="/download"><button>Download Excel</button></a>
+        <br><br>
+    </div>
+
+    <div style="float: center; Padding-left: 430px">
+        <h3>Upload Excel File</h3>
+	    <form method="post" action="/upload" enctype="multipart/form-data">
+		    <input type="file" name="file">
+		    <input type="submit" value="Upload">
+	    </form>
+
+        <br><br>
+
+        <a href="{{ url_for('table') }}" class="btn btn-primary" target="_blank">Go to table</a>
+    </div>
+
+
+
+
+<script>
+        function validateForm() {
+      // Get the form elements
+      const startDateInput = document.getElementById("start_date");
+      const workDescriptInput = document.getElementById("work_descript");
+      const timeInInput = document.getElementById("time_in");
+      const timeOutInput = document.getElementById("time_out");
+      const actualTimeInInput = document.getElementById("actual_time_in");
+      const actualTimeOutInput = document.getElementById("actual_time_out");
+
+      // Check if any of the input fields are blank
+      if (
+        startDateInput.value === "" ||
+        workDescriptInput.value === "" ||
+        timeInInput.value === "" ||
+        timeOutInput.value === "" ||
+        actualTimeInInput.value === "" ||
+        actualTimeOutInput.value === ""
+      ) {
+        // Display an error message and prevent the form from submitting
+        alert("Please fill out all required fields.");
+        return false;
+      }
+
+      // If all fields are filled out, allow the form to submit
+      return true;
+    }
+
+        // Get the input date element and save the initial value
+      const startDateInput = document.getElementById("start_date");
+      let startDate = new Date(startDateInput.value);
+
+      function validateForm() {
+        // ...the rest of the function...
+        // If all fields are filled out, allow the form to submit and add 1 day to the input date
+        startDate.setDate(startDate.getDate() + 1);
+        startDateInput.value = startDate.toISOString().split("T")[0];
+        return true;
+
+        function setTimeOut() {
+      var timeIn = document.getElementById("time_in").value;
+      if (timeIn) {
+        var timeInDate = new Date("1970-01-01T" + timeIn + "Z");
+        timeInDate.setHours(timeInDate.getHours() + 1);
+        var timeOut = timeInDate.toTimeString().slice(0, 5);
+        document.getElementById("time_out").value = timeOut;
+      }
+    }
+
+        window.onload = function() {
+      var employeeCodeInput = document.getElementById('employee_code');
+      var employeeNameInput = document.getElementById('employee_name');
+
+      if (getCookie('employeeCode')) {
+        employeeCodeInput.value = getCookie('employeeCode');
+      }
+
+      if (getCookie('employeeName')) {
+        employeeNameInput.value = getCookie('employeeName');
+      }
+    }
+
+    function getCookie(name) {
+      var cookieName = name + '=';
+      var decodedCookie = decodeURIComponent(document.cookie);
+      var cookieArray = decodedCookie.split(';');
+
+      for(var i = 0; i < cookieArray.length; i++) {
+        var cookie = cookieArray[i];
+        while (cookie.charAt(0) == ' ') {
+          cookie = cookie.substring(1);
+        }
+        if (cookie.indexOf(cookieName) == 0) {
+          return cookie.substring(cookieName.length, cookie.length);
+        }
+      }
+
+      return '';
+    }
+
+        function setCookie(name, value) {
+      var cookieString = name + '=' + value + ';';
+      document.cookie = cookieString;
+    }
+
+    var form = document.getElementsByTagName('form')[0];
+    form.addEventListener('submit', function(event) {
+      var employeeCodeInput = document.getElementById('employee_code');
+      var employeeNameInput = document.getElementById('employee_name');
+
+      if (employeeCodeInput.value != '') {
+        setCookie('employeeCode', employeeCodeInput.value);
+      }
+
+      if (employeeNameInput.value != '') {
+        setCookie('employeeName', employeeNameInput.value);
+      }
+    });
+</script>
+<script>
+        function lookup_employee() {
+      var employee_code = document.getElementById("employee_code").value;
+      var xhr = new XMLHttpRequest();
+      xhr.open("POST", "/lookup_employee", true);
+      xhr.setRequestHeader('Content-Type', 'application/json');
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4 && xhr.status == 200) {
+          var employee_name = JSON.parse(xhr.responseText)["employee_name"];
+          document.getElementById("employee_name").value = employee_name;
+        }
+      };
+      xhr.send(JSON.stringify({"employee_code": employee_code}));
+    }
+
+</script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.min.js"></script>
+<script>
+    window.onload = function() {
+        // Get the current scroll position
+        var scrollPosition = localStorage.getItem('scrollPosition');
+
+        // If there is a saved scroll position, scroll to it
+        if (scrollPosition !== null) {
+            window.scrollTo(0, scrollPosition);
+            // Clear the saved scroll position
+            localStorage.removeItem('scrollPosition');
+        }
+    }
+
+    window.onbeforeunload = function() {
+        // Save the current scroll position
+        localStorage.setItem('scrollPosition', window.pageYOffset);
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Timekeeping System Table</title>
+    <!-- Include Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <style>
+        /* Add sticky header to table */
+        #table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            background-color: #fff;
+
+        }
+        table {
+            font-size: 9.5px;
+            }
+
+        .highlight {
+        background-color: yellow;
+        }
+
+        /* Style the button */
+        .float {
+          position: fixed;
+          width: 60px;
+          height: 60px;
+          bottom: 40px;
+          left: 20px;
+          background-color: black;
+          border-radius: 10px;
+          border: solid black;
+          text-align: center;
+          font-size: 10px;
+          color: #FFF;
+          box-shadow: 2px 2px 3px #999;
+          z-index: 100;
+        }
+
+        /* Add a hover effect to the button */
+        .float:hover {
+          background-color: #FFF;
+          color: black;
+          box-shadow: 2px 2px 3px #666;
+        }
+
+        body {
+            margin: 0px;
+            padding: 0px;
+            }
+        .table-container {
+            position: relative;
+        }
+
+        #save-button {
+        position: sticky;
+        top: 0;
+        left: 0;
+        z-index: 1;
+    }
+
+    </style>
+</head>
+<body>
+    <div class="container mt-5" style="margin: 0px">
+        <div class="form-group">
+            <label for="search">Search:</label>
+            <input type="text" class="form-control" id="search">
+        </div>
+        <div class="summary-table" style="float: right">
+            {{ summary|safe }}
+        </div>
+            <label for="save-all-btn">Save All Actions: </label>
+            <button id="save-all-btn">Save All</button>
+            {% if data %}
+                <table class="table table-striped" id="table">
+                    <thead>
+                        <tr>
+                            <th>Action</th>
+                            {% for key in data[0].keys() %}
+                            <th>{{ key }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in data %}
+                        <tr>
+                            <form method="POST" action="{{ url_for('save_row') }}">
+                                {% if row['Overtime'] > 0.0000000000 %}
+                                <td class="highlight">
+                                    <select name="status">
+                                        <option value="Not Approved">Not Approved</option>
+                                        <option value="Approved" >Approved</option>
+                                    </select>
+                                    <br><br>
+                                    <input type="hidden" name="index" value="{{ loop.index0 }}">
+                                    <button type="submit">Save</button>
+                                </td>
+                                {% else %}
+                                <td></td>
+                                {% endif %}
+
+                                {% for key, val in row.items() %} <!-- use items() instead of values() to get both key and value -->
+                                <td {% if row['Overtime'] > 0.0000000000 %} class="highlight" {% endif %}>{{ val }}</td>
+                                {% endfor %}
+                            </form>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>No data available.</p>
+            {% endif %}
+        </div>
+
+
+    </div>
+
+
+    <!-- Include Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    
+    <!-- Include custom JavaScript -->
+    <script>
+        $(document).ready(function() {
+            // Add sorting capability to table headers
+            $('#table th').click(function() {
+                var table = $(this).parents('table').eq(0);
+                var rows = table.find('tr:gt(0)').toArray().sort(compare($(this).index()));
+                this.asc = !this.asc;
+                if (!this.asc) {
+                    rows = rows.reverse();
+                }
+                for (var i = 0; i < rows.length; i++) {
+                    table.append(rows[i]);
+                }
+            });
+
+            function compare(index) {
+                return function(a, b) {
+                var valA = getCellValue(a, index);
+                var valB = getCellValue(b, index);
+                return $.isNumeric(valA) && $.isNumeric(valB) ? valA - valB : valA.toString().localeCompare(valB);
+                };
+            }
+
+            function getCellValue(row, index) {
+                return $(row).children('td').eq(index).text();
+            }
+
+             // Add filtering capability to search input
+            $('#search').val(localStorage.getItem('searchValue')).keyup(function() {
+                var value = $(this).val().toLowerCase();
+                localStorage.setItem('searchValue', value); // Store the search value in local storage
+                $('#table tbody tr').filter(function() {
+                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+                });
+            }).trigger('keyup'); // Trigger the keyup event to filter the table on page load
+
+            // Restore the filter value from local storage on page load
+            var filterValue = localStorage.getItem('searchValue');
+            if (filterValue) {
+                $('#search').val(filterValue);
+            }
+        });
+
+        // Save the updated data to the CSV file
+        $("#save-btn").click(function() {
+            // Update the Status column with the selected option
+            $("#table tbody tr").each(function(index, rowEl) {
+                var selectEl = $(rowEl).find("select");
+                var selectedOption = selectEl.val();
+                parsedData[index].Status = selectedOption;
+                $(rowEl).find("td:eq(-1)").text(selectedOption);
+            });
+
+            // Convert the data to CSV format
+            var csvData = Papa.unparse(parsedData);
+
+            // Send a POST request to the server to save the updated CSV data
+            $.ajax({
+                type: "POST",
+                url: "/save",
+                data: csvData,
+                contentType: "text/csv",
+                success: function(response) {
+                    alert("Data saved successfully!");
+                },
+                error: function(xhr, status, error) {
+                    console.log(error);
+                    alert("Failed to save data.");
+                }
+            });
+        });
+  
+
+
+    </script>
+</body>
+</html>
