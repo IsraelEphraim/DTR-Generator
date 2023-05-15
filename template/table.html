@@ -71,8 +71,7 @@
         <div class="summary-table" style="float: right">
             {{ summary|safe }}
         </div>
-            <label for="save-all-btn">Save All Actions: </label>
-            <button id="save-all-btn">Save All</button>
+            
             {% if data %}
                 <table class="table table-striped" id="table">
                     <thead>
@@ -96,6 +95,9 @@
                                     <br><br>
                                     <input type="hidden" name="index" value="{{ loop.index0 }}">
                                     <button type="submit">Save</button>
+
+                                    <label for="save-all-button">Save All Actions: </label>
+                                    <button id="save-all-button">Save All</button>
                                 </td>
                                 {% else %}
                                 <td></td>
@@ -112,10 +114,19 @@
             {% else %}
                 <p>No data available.</p>
             {% endif %}
-        </div>
 
-
+        
+      
     </div>
+
+    <script>
+            const saveAllButton = document.getElementById('save-all-button');
+            saveAllButton.addEventListener('click', () => {
+                const saveButtons = document.querySelectorAll('td.highlight button[type="submit"]');
+                saveButtons.forEach(button => button.click());
+            });
+
+    </script>
 
 
     <!-- Include Bootstrap JS -->

@@ -1,7 +1,10 @@
 import os
+import csv
 from flask import Flask, render_template, request, redirect, send_file, jsonify, url_for
 import pandas as pd
 from datetime import datetime, timedelta, time
+
+port = int(os.environ.get('PORT', 9000))
 
 app = Flask(__name__, template_folder='template')
 
@@ -12,6 +15,11 @@ def delete_duplicate(df):
 
 @app.route('/')
 def index():
+    csv_file_path = 'dtr.csv'
+
+    if os.path.exists(csv_file_path):
+        os.remove(csv_file_path)
+
     try:
         dtr = pd.read_csv('dtr.csv')
     except FileNotFoundError:
@@ -341,13 +349,12 @@ def calculate_timeanddate(employee_name, employee_code, day_of_week, date_transa
     night_diff_8 = 0
     if total_datetime_in_out < total_actual_datetime_in_out:
         if excess_hours_night > 8 and date_time_actual_end > date_time_start_night:
-            excess_night_night = excess_hours_night - 8
             night_diff_8 = date_time_actual_end - date_time_start_night
             night_diff_8 = str(night_diff_8)
             night_diff_8 = datetime.strptime(night_diff_8, '%H:%M:%S')
             night_diff_8 = night_diff_8.strftime('%H.%M')
             night_diff_8 = float(night_diff_8)
-            night_diff_8 = night_diff_8 - excess_night_night
+            night_diff_8 = night_diff_8 - 8
             night_diff_first_8 = night_diff_total - night_diff_8
 
 
@@ -974,5 +981,7 @@ def download():
     # Download the new CSV file
     return send_file('DTR_Summary.xlsx', as_attachment=True)
 
+
+
 if __name__ == '__main__':
-    app.run(debug=True, use_reloader=True)
+    app.run(use_reloader=True, port=port)
