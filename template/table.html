@@ -96,8 +96,7 @@
                                     <input type="hidden" name="index" value="{{ loop.index0 }}">
                                     <button type="submit">Save</button>
 
-                                    <label for="save-all-button">Save All Actions: </label>
-                                    <button id="save-all-button">Save All</button>
+                                    
                                 </td>
                                 {% else %}
                                 <td></td>
@@ -115,18 +114,10 @@
                 <p>No data available.</p>
             {% endif %}
 
-        
+            <button id="save-all-button" class="float">Save All</button> <!-- Add Save All button -->
+
       
     </div>
-
-    <script>
-            const saveAllButton = document.getElementById('save-all-button');
-            saveAllButton.addEventListener('click', () => {
-                const saveButtons = document.querySelectorAll('td.highlight button[type="submit"]');
-                saveButtons.forEach(button => button.click());
-            });
-
-    </script>
 
 
     <!-- Include Bootstrap JS -->

@@ -642,6 +642,14 @@ def save_row():
     df.to_csv('dtr.csv', index=False)
     return redirect(url_for('table'))
 
+@app.route('/save_all', methods=['POST'])
+def save_all():
+    index = int(request.form['index'])
+    df = pd.read_csv('dtr.csv')
+    df.loc[index, 'Status'] = status
+    df.to_csv('dtr.csv', index=False)
+    return redirect(url_for('table'))
+
 @app.route('/download')
 def download():
     # Step 1: Read input file into a DataFrame
@@ -984,4 +992,4 @@ def download():
 
 
 if __name__ == '__main__':
-    app.run(use_reloader=True, port=port)
+    app.run(debug=True ,use_reloader=True, port=port)
