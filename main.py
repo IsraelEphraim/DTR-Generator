@@ -3,10 +3,17 @@ import csv
 from flask import Flask, render_template, request, redirect, send_file, jsonify, url_for
 import pandas as pd
 from datetime import datetime, timedelta, time
+import webview
+import sys
+
+base_dir = '.'
+if hasattr(sys, '_MEIPASS'):
+    base_dir = os.path.join(sys._MEIPASS)
 
 port = int(os.environ.get('PORT', 9000))
 
-app = Flask(__name__, template_folder='template')
+app = Flask(__name__, template_folder=os.path.join(base_dir, 'template'))
+window = webview.create_window('DTR Generator', app)
 
 def delete_duplicate(df):
     df.drop_duplicates(subset=['Employee Code', 'Date'], inplace=True)
@@ -1001,3 +1008,4 @@ def download():
 
 if __name__ == '__main__':
     app.run(debug=True ,use_reloader=True, port=port)
+    # webview.start()
