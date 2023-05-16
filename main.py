@@ -642,13 +642,17 @@ def save_row():
     df.to_csv('dtr.csv', index=False)
     return redirect(url_for('table'))
 
-@app.route('/save_all', methods=['POST'])
-def save_all():
-    index = int(request.form['index'])
+@app.route('/save_all_rows', methods=['POST'])
+def save_all_rows():
     df = pd.read_csv('dtr.csv')
-    df.loc[index, 'Status'] = status
+    for index, row in df.iterrows():
+        status = request.form.get(f'status_{index}')
+        df.loc[index, 'Status'] = status
     df.to_csv('dtr.csv', index=False)
     return redirect(url_for('table'))
+
+
+
 
 @app.route('/download')
 def download():

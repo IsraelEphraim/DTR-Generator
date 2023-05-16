@@ -74,49 +74,47 @@
             
             {% if data %}
                 <table class="table table-striped" id="table">
-                    <thead>
-                        <tr>
-                            <th>Action</th>
-                            {% for key in data[0].keys() %}
-                            <th>{{ key }}</th>
-                            {% endfor %}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for row in data %}
-                        <tr>
-                            <form method="POST" action="{{ url_for('save_row') }}">
-                                {% if row['Overtime'] > 0.0000000000 %}
-                                <td class="highlight">
-                                    <select name="status">
-                                        <option value="Not Approved">Not Approved</option>
-                                        <option value="Approved" >Approved</option>
-                                    </select>
-                                    <br><br>
-                                    <input type="hidden" name="index" value="{{ loop.index0 }}">
-                                    <button type="submit">Save</button>
+    <thead>
+        <tr>
+            <th>Action</th>
+            {% for key in data[0].keys() %}
+            <th>{{ key }}</th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        <form method="POST" action="{{ url_for('save_all_rows') }}">
+        {% for row in data %}
+        <tr>
+            {% if row['Overtime'] > 0.0000000000 %}
+            <td class="highlight">
+                <select name="status_{{ loop.index0 }}">
+                    <option value="Not Approved" {% if row['Status'] == 'Not Approved' %} selected {% endif %}>Not Approved</option>
+                    <option value="Approved" {% if row['Status'] == 'Approved' %} selected {% endif %}>Approved</option>
+                </select>
+            </td>
+            {% else %}
+            <td></td>
+            {% endif %}
 
-                                    
-                                </td>
-                                {% else %}
-                                <td></td>
-                                {% endif %}
+            {% for key, val in row.items() %}
+            <td {% if row['Overtime'] > 0.0000000000 %} class="highlight" {% endif %}>{{ val }}</td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+            <form colspan="{{ data[0]|length + 1 }}">
+                <button type="submit" class="float">Save All</button>
+            </form>
+        </form>
+    </tbody>
+</table>
 
-                                {% for key, val in row.items() %} <!-- use items() instead of values() to get both key and value -->
-                                <td {% if row['Overtime'] > 0.0000000000 %} class="highlight" {% endif %}>{{ val }}</td>
-                                {% endfor %}
-                            </form>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
             {% else %}
                 <p>No data available.</p>
             {% endif %}
 
-            <button id="save-all-button" class="float">Save All</button> <!-- Add Save All button -->
 
-      
+
     </div>
 
 
@@ -124,7 +122,10 @@
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
-    
+    <!-- Include PapaParse library for CSV parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+
+
     <!-- Include custom JavaScript -->
     <script>
         $(document).ready(function() {
@@ -167,37 +168,7 @@
             if (filterValue) {
                 $('#search').val(filterValue);
             }
-        });
-
-        // Save the updated data to the CSV file
-        $("#save-btn").click(function() {
-            // Update the Status column with the selected option
-            $("#table tbody tr").each(function(index, rowEl) {
-                var selectEl = $(rowEl).find("select");
-                var selectedOption = selectEl.val();
-                parsedData[index].Status = selectedOption;
-                $(rowEl).find("td:eq(-1)").text(selectedOption);
-            });
-
-            // Convert the data to CSV format
-            var csvData = Papa.unparse(parsedData);
-
-            // Send a POST request to the server to save the updated CSV data
-            $.ajax({
-                type: "POST",
-                url: "/save",
-                data: csvData,
-                contentType: "text/csv",
-                success: function(response) {
-                    alert("Data saved successfully!");
-                },
-                error: function(xhr, status, error) {
-                    console.log(error);
-                    alert("Failed to save data.");
-                }
-            });
-        });
-  
+        }); 
 
 
     </script>
