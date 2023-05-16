@@ -15,11 +15,6 @@ def delete_duplicate(df):
 
 @app.route('/')
 def index():
-    csv_file_path = 'dtr.csv'
-
-    if os.path.exists(csv_file_path):
-        os.remove(csv_file_path)
-
     try:
         dtr = pd.read_csv('dtr.csv')
     except FileNotFoundError:
@@ -612,6 +607,15 @@ def delete_row():
     html_table = data.to_html(index=False)
 
     return render_template('index.html', html_table=html_table)
+
+@app.route('/delete_data', methods=['POST'])
+def delete_data():
+    csv_file_path = 'dtr.csv'
+
+    if os.path.exists(csv_file_path):
+        os.remove(csv_file_path)
+
+    return render_template('index.html')
 
 @app.route('/table', methods=['GET', 'POST'])
 def table():

@@ -20,38 +20,59 @@
 
       table.data tr:nth-child(even){background-color: #f2f2f2}
 
-      <style>
-    .sticky-header {
-        position: fixed;
+     
+        .sticky-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 999;
+            background-color: #fff; /* adjust to your header color */
+            box-shadow: 0 2px 5px rgba(0,0,0,.2); /* optional: add a shadow to the header */
+        }
+        .sticky-header {
+        position: sticky;
         top: 0;
-        left: 0;
-        width: 100%;
         z-index: 999;
-        background-color: #fff; /* adjust to your header color */
-        box-shadow: 0 2px 5px rgba(0,0,0,.2); /* optional: add a shadow to the header */
-    }
-    .sticky-header {
-    position: sticky;
-    top: 0;
-    z-index: 999;
-    background-color: #fff; /* replace with your desired background color */
-    }
-    /* Add sticky header to table */
+        background-color: #fff; /* replace with your desired background color */
+        }
+        /* Add sticky header to table */
         #table thead th {
             position: sticky;
             top: 0;
             z-index: 1;
             background-color: #fff;
         }
+
         .highlight {
         background-color: yellow;
         }
+
+
+        .h3-bgcolor{
+            color: #e60000;
+            padding-right: 0;
+            margin-right: 0;
+        }
+
+        .header{
+            position: sticky;
+            top: 0;
+            z-index: 999;
+            border-block: 10px solid red;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
     </style>
 
 </head>
 <body>
-    <h1>Timekeeping System</h1>
+    <header class="header">
+        <h1>DTR Generator</h1>
+    </header>
     <div style="float: left; margin-left: 20px">
+        <h3>Input Employee Data</h3>
         <br>
         <form method="post" action="/submit" onsubmit="return validateForm()">
 
@@ -98,8 +119,8 @@
             <br><br>
         </form>
     </div>
-    <div style="float: right;">
-        <h3>Delete Data</h3>
+    <div style="float: right; padding-right: 50px;">
+        <h3 class="h3-bgcolor">Delete Data</h3>
         <form method="post" action="/delete">
             <label for="delete_employee_code">Delete Row</label>
             <input type="text" name="delete_employee_code" id="delete_employee_code" placeholder="Employee Code">
@@ -108,15 +129,18 @@
             <p style="margin-left: 125.5px">Case Sensitive</p>
         </form>
 
-        <br><br>
+        <br>
 
-        <h3>Download Summary</h3>
-        <p>Click the button to download the CSV file:</p>
-        <a href="/download"><button>Download Excel</button></a>
-        <br><br>
+        <h3 class="h3-bgcolor">Delete Table</h3>
+        <form method="post" action="/delete_data">
+            <p>All employee data will be deleted</p>
+            <button type="submit" name="/delete_data">Delete Data</button>
+        </form>
+
+        
     </div>
 
-    <div style="float: center; Padding-left: 430px">
+    <div style="float: center; Padding-left: 500px">
         <h3>Upload Excel File</h3>
 	    <form method="post" action="/upload" enctype="multipart/form-data">
 		    <input type="file" name="file">
@@ -125,7 +149,17 @@
 
         <br><br>
 
+        <h3>Download Summary</h3>
+        <p>Click the button to download the CSV file:</p>
+        <a href="/download"><button>Download Excel</button></a>
+
+        
+
+        <br><br><br><br>
+
         <a href="{{ url_for('table') }}" class="btn btn-primary" target="_blank">Go to table</a>
+
+
     </div>
 
 
