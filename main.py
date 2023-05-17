@@ -1,5 +1,4 @@
 import os
-import csv
 from flask import Flask, render_template, request, redirect, send_file, jsonify, url_for
 import pandas as pd
 from datetime import datetime, timedelta, time
@@ -77,7 +76,6 @@ def index():
                                     'Night Difference Overtime',
                                    'Night Difference First 8 hours',
                                    'Night Difference Excess of 8 hours'])
-    delete_duplicate(df)
 
     return render_template('index.html', dtr=dtr)
 
@@ -89,16 +87,21 @@ def lookup_employee():
     employee_name = employee_data.loc[employee_data["Employee Code"] == employee_code, "Employee Name"].iloc[0]
     return jsonify({"employee_name": employee_name})
 
+def timedelta_to_decimal(timedelta_value):
+    total_seconds = timedelta_value.total_seconds()
+    decimal_value = total_seconds / 3600  # Divide by 3600 to convert seconds to decimal hours
+    return decimal_value
+
 def calculate_timeanddate(employee_name, employee_code, day_of_week, date_transact1, date_obj, work_descript, time_in, time_out, time_in1, time_out1, actual_time_in, actual_time_out, actual_time_in1, actual_time_out1):
     week_day = date_obj.weekday()
     if week_day < 5:  # Weekday (Monday to Friday)
         week_check = "Weekday"
     else:  # Weekend day (Saturday or Sunday)
         week_check = "Weekend"
-        # Do something with day_of_week variable
 
 
-
+    # =====================================================================
+    #TOTAL OF SCHEDULED TIME IN AND TIME OUT
     datetime_timein = datetime.combine(date_obj.date(), time_in1)
     if time_in1 > time_out1:
         add_day = timedelta(days=1)
@@ -108,8 +111,12 @@ def calculate_timeanddate(employee_name, employee_code, day_of_week, date_transa
     else:
         datetime_timeout = datetime.combine(date_obj.date(), time_out1)
 
+    #ITO YUNG TOTAL BOSS
     total_datetime_in_out = datetime_timeout - datetime_timein
+    total_datetime_in_out_int = timedelta_to_decimal(total_datetime_in_out)
 
+    #=====================================================================
+    # TOTAL OF ACTUAL TIME IN AND TIME OUT
     actual_datetime_timein = datetime.combine(date_obj.date(), actual_time_in1)
     if actual_time_in1 > actual_time_out1:
         actual_add_day = timedelta(days=1)
@@ -119,95 +126,125 @@ def calculate_timeanddate(employee_name, employee_code, day_of_week, date_transa
     else:
         actual_datetime_timeout = datetime.combine(date_obj.date(), actual_time_out1)
 
+    # ITO YUNG TOTAL BOSS
     total_actual_datetime_in_out =  actual_datetime_timeout - actual_datetime_timein
+    total_actual_datetime_in_out_int = timedelta_to_decimal(total_actual_datetime_in_out)
+    print(total_actual_datetime_in_out_int)
+    #=====================================================================
+    #NON CHARGEABLE BREAK
+    break_start = '12:00'
+    break_end = '13:00'
+    break_start_convert = datetime.strptime(break_start, "%H:%M").time()
+    break_end_convert = datetime.strptime(break_end, "%H:%M").time()
+    break_start_convert_1 = datetime.combine(date_obj, break_start_convert)
+    break_end_convert_1 = datetime.combine(date_obj, break_end_convert)
 
-    # Non Chargeable Break
-    non_chargeable_break = time(1, 0, 0)
-    non_chargeable_break_timedelta = timedelta(hours=non_chargeable_break.hour, minutes=non_chargeable_break.minute,
-                                               seconds=non_chargeable_break.second)
+    if actual_datetime_timein < break_start_convert_1 and actual_datetime_timeout > break_end_convert_1:
+        non_chargeable_break = time(1, 0, 0)
+        non_chargeable_break_timedelta = timedelta(hours=non_chargeable_break.hour, minutes=non_chargeable_break.minute,
+                                                   seconds=non_chargeable_break.second)
 
-    # Shift Hours
-    shift_hour = datetime_timeout - datetime_timein
-    shift_hour_str = str(shift_hour)
+    else:
+        non_chargeable_break = time(0, 0, 0)
+        non_chargeable_break_timedelta = timedelta(hours=non_chargeable_break.hour, minutes=non_chargeable_break.minute,
+                                                   seconds=non_chargeable_break.second)
 
-    # Net Hours Rendered
-    net_hours_rendered = shift_hour - non_chargeable_break_timedelta
-    net_hours_rendered_str = str(net_hours_rendered)
-    net_hours_rendered_time = round(net_hours_rendered / timedelta(hours=1), 2)
+    #=====================================================================
+    #NET HOURS RENDERED
+    if week_check == 'Weekday' and work_descript == 'regular day':
+        net_hours_rendered = total_datetime_in_out - non_chargeable_break_timedelta
+        net_hours_rendered_str = timedelta_to_decimal(net_hours_rendered)
 
+    else:
+        net_hours_rendered_str = 0
 
-    # Actual Gross Hours Rendered
-    if total_actual_datetime_in_out > non_chargeable_break_timedelta:
+    #=====================================================================
+    #ACTUAL GROSS RENDERED
+
+    actual_render = 0
+    if total_actual_datetime_in_out_int > 0:
         actual_render = total_actual_datetime_in_out - non_chargeable_break_timedelta
-        actual_render_str = str(actual_render)
-        actual_render_str = datetime.strptime(actual_render_str, '%H:%M:%S')
-        actual_render_str = actual_render_str.strftime('%H.%M')
-        actual_render2 = float(actual_render_str)
-    else:
-        actual_render = total_actual_datetime_in_out
-        actual_render_str = str(actual_render)
-        actual_render_str = datetime.strptime(actual_render_str, '%H:%M:%S')
-        actual_render_str = actual_render_str.strftime('%H.%M')
-        actual_render2 = float(actual_render_str)
+        actual_render = timedelta_to_decimal(actual_render)
+        actual_render = round(actual_render, 2)
 
-    # Regular 8 Hours
-    regular = time(8, 0, 0)
-    regular_timedelta = timedelta(hours=regular.hour, minutes=regular.minute,
-                                  seconds=regular.second)
-    if actual_render > regular_timedelta:
-        regular_8 = regular_timedelta
-        regular_8 = str(regular_8)
+    elif work_descript == 'legal holiday' and total_actual_datetime_in_out_int == 0 and total_datetime_in_out_int == 0:
+        actual_render = 8
 
-    else:
-        regular_8 = timedelta(hours=round(actual_render.total_seconds() / 3600))
-        regular_8 = str(regular_8)
+    elif work_descript == 'special holiday' and total_actual_datetime_in_out_int == 0 and total_datetime_in_out_int == 0:
+        actual_render = 8
 
+    #=====================================================================
+    #HOURS RENDERED
 
-    # Hours Rendered
     hour_rendered = total_actual_datetime_in_out
-    hour_rendered_str = str(hour_rendered)
-    hour_rendered_str = datetime.strptime(hour_rendered_str, '%H:%M:%S')
-    hour_rendered_str = hour_rendered_str.strftime('%H.%M')
-    hour_rendered_str = float(hour_rendered_str)
+    hour_rendered_str = timedelta_to_decimal(hour_rendered)
+    hour_rendered_str = int(hour_rendered_str)
+
+    if work_descript == 'legal holiday' or work_descript == 'special holiday' and total_actual_datetime_in_out_int == 0 and total_datetime_in_out_int == 0:
+        hour_rendered_str = 8
 
 
-    # Total Hours
-    total_hours = hour_rendered - non_chargeable_break_timedelta
-    total_hours_str = round(total_hours / timedelta(hours=1), 2)
-    if total_hours_str < 0:
-        total_hours_str = 0
+    if hour_rendered_str > 8:
+        hour_rendered_str = 8
 
-    # Overtime
-    overtime = total_hours - net_hours_rendered
-    overtime_str = round(overtime / timedelta(hours=1), 2)
 
-    if overtime_str < 1:
-        overtime_str = 0
+    #=====================================================================
+    #OVERTIME
+    if week_check == 'Weekday' and work_descript == 'regular day':
+        overtime = actual_render - net_hours_rendered_str
+        overtime = round(overtime, 2)
+
+    elif work_descript == 'legal holiday' and total_actual_datetime_in_out_int == 0 and total_datetime_in_out_int == 0:
+        overtime = 0
+
+    elif work_descript == 'special holiday' and total_actual_datetime_in_out_int == 0 and total_datetime_in_out_int == 0:
+        overtime = 0
+
+    elif work_descript == 'legal holiday' and total_actual_datetime_in_out_int > 1 and total_datetime_in_out_int > 0:
+        overtime = actual_render
+
+    elif work_descript == 'special holiday' and total_actual_datetime_in_out_int > 1 and total_datetime_in_out_int > 0:
+        overtime = actual_render
+
+    else:
+        overtime = hour_rendered_str
+
+
+    x = int(overtime)
+    y = overtime - int(overtime)
+
+    if y > .50:
+        y = .50
+        overtime= x + y
+
+    elif y < .50:
+        y = 0
+        overtime = x + y
+
+    if overtime < 1:
+        overtime = 0
 
     excess_overtime = 0
     total_8hours = 0
-    if overtime_str > 8:
-        excess_overtime = overtime_str - 8
-        total_8hours = overtime_str - excess_overtime
+    if overtime > 8:
+        excess_overtime = overtime - 8
+        total_8hours = overtime - excess_overtime
 
-    # Excess Hours in Numerical
-    excess_num = total_hours - net_hours_rendered
-    excess_num = round(excess_num / timedelta(hours=1), 2)
-    if excess_num < 0:
-        excess_num = 0
+    #=====================================================================
+    #UNDERTIME HOURS
 
+    if week_check == 'Weekday' and work_descript == 'regular day':
+        if total_actual_datetime_in_out < total_datetime_in_out:
+            undertime_check_try = total_datetime_in_out - total_actual_datetime_in_out
+            undertime_check_try = timedelta_to_decimal(undertime_check_try)
+        else:
+            undertime_check_try = 0
 
-    # Undertime Hours
-    if total_actual_datetime_in_out < total_datetime_in_out:
-        undertime_check_try = total_datetime_in_out - total_actual_datetime_in_out
-        undertime_check_try = str(undertime_check_try)
-        undertime_check_try = datetime.strptime(undertime_check_try, '%H:%M:%S')
-        undertime_check_try = undertime_check_try.strftime('%H.%M')
-        undertime_check_try = float(undertime_check_try)
     else:
         undertime_check_try = 0
 
-    # Time in Tardiness
+    #=====================================================================
+    #TARDINESS
     expected = time(0, 0, 0)
     expected_timedelta = timedelta(hours=expected.hour, minutes=expected.minute, seconds=expected.second)
 
@@ -286,7 +323,7 @@ def calculate_timeanddate(employee_name, employee_code, day_of_week, date_transa
     # Night Difference END
 
     night_diff_total_overtime = 0
-    hour_night_rendered = actual_render2
+    hour_night_rendered = actual_render
     night_in = datetime.combine(date_obj, time_in1)
     night_out = datetime.combine(date_obj, time_out1)
     night_date_in_out = date_obj
@@ -362,14 +399,16 @@ def calculate_timeanddate(employee_name, employee_code, day_of_week, date_transa
 
     # Approval
     status_OT = ''
-    if overtime_str >= 1:
+    if overtime >= 1:
         status_OT = 'Not Approved'
-    elif overtime_str == 0:
+    elif work_descript == 'regular day' and overtime == 0:
         status_OT = 'No OT'
+    elif work_descript == 'legal holiday' or work_descript == 'special holiday' and overtime == 0:
+        status_OT = 'Holiday'
 
     # Encoding of inputs to the dataframe
     dtr_new = pd.DataFrame({'Status': [status_OT],
-                            'Overtime': [overtime_str],
+                            'Overtime': [overtime],
                             'Employee Code': [employee_code],
                             'Employee Name': [employee_name],
                             'Date': [date_transact1],
@@ -381,7 +420,7 @@ def calculate_timeanddate(employee_name, employee_code, day_of_week, date_transa
                             'Actual Time In': [actual_time_in],
                             'Actual Time Out': [actual_time_out],
                             'Net Hours Rendered (Time Format)': [net_hours_rendered_str],
-                            'Actual Gross Hours Render': [actual_render_str],
+                            'Actual Gross Hours Render': [actual_render],
                             'Hours Rendered': [hour_rendered_str],
                             'Undertime Hours': [undertime_check_try],
                             'Tardiness': [tardiness_str],
@@ -633,6 +672,7 @@ def table():
         summary = pd.DataFrame({
             'Actual Gross Hours Rendered': [df['Actual Gross Hours Render'].sum()],
             'Hours Rendered': [df['Hours Rendered'].sum()],
+            'Overtime': [df['Overtime'].sum()],
             'Undertime Hours': [df['Undertime Hours'].sum()],
             'Tardiness': [df['Tardiness'].sum()],
             'Night Difference': [df['Night Difference'].sum()],
