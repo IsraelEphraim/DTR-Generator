@@ -68,46 +68,46 @@
             <label for="search">Search:</label>
             <input type="text" class="form-control" id="search">
         </div>
-        <div class="summary-table" style="float: right">
+        <div class="summary-table" >
             {{ summary|safe }}
         </div>
             
             {% if data %}
                 <table class="table table-striped" id="table">
-    <thead>
-        <tr>
-            <th>Action</th>
-            {% for key in data[0].keys() %}
-            <th>{{ key }}</th>
-            {% endfor %}
-        </tr>
-    </thead>
-    <tbody>
-        <form method="POST" action="{{ url_for('save_all_rows') }}">
-        {% for row in data %}
-        <tr>
-            {% if row['Overtime'] > 0.0000000000 %}
-            <td class="highlight">
-                <select name="status_{{ loop.index0 }}">
-                    <option value="Not Approved" {% if row['Status'] == 'Not Approved' %} selected {% endif %}>Not Approved</option>
-                    <option value="Approved" {% if row['Status'] == 'Approved' %} selected {% endif %}>Approved</option>
-                </select>
-            </td>
-            {% else %}
-            <td></td>
-            {% endif %}
+                    <thead>
+                        <tr>
+                            <th>Action</th>
+                            {% for key in data[0].keys() %}
+                            <th>{{ key }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <form method="POST" action="{{ url_for('save_all_rows') }}">
+                        {% for row in data %}
+                        <tr>
+                            {% if row['Overtime'] > 0.0000000000 %}
+                            <td class="highlight">
+                                <select name="status_{{ loop.index0 }}">
+                                    <option value="Not Approved" {% if row['Status'] == 'Not Approved' %} selected {% endif %}>Not Approved</option>
+                                    <option value="Approved" {% if row['Status'] == 'Approved' %} selected {% endif %}>Approved</option>
+                                </select>
+                            </td>
+                            {% else %}
+                            <td></td>
+                            {% endif %}
 
-            {% for key, val in row.items() %}
-            <td {% if row['Overtime'] > 0.0000000000 %} class="highlight" {% endif %}>{{ val }}</td>
-            {% endfor %}
-        </tr>
-        {% endfor %}
-            <form colspan="{{ data[0]|length + 1 }}">
-                <button type="submit" class="float">Save All</button>
-            </form>
-        </form>
-    </tbody>
-</table>
+                            {% for key, val in row.items() %}
+                            <td {% if row['Overtime'] > 0.0000000000 %} class="highlight" {% endif %}>{{ val }}</td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                            <form colspan="{{ data[0]|length + 1 }}">
+                                <button type="submit" class="float">Save All</button>
+                            </form>
+                        </form>
+                    </tbody>
+                </table>
 
             {% else %}
                 <p>No data available.</p>
