@@ -1036,141 +1036,34 @@ def download():
             working_hours = row['Actual Gross Hours Render']
             tardiness = row['Tardiness']
 
-            if time_in is not None:
-                total_working_days = total_working_days + 1
-
-            working_hours1 = working_hours + working_hours1
-
-            tardiness1 = tardiness + tardiness1
-
-            if work_desc == 'regular day':
-                if rest_day == 'Weekend':
-                    RegularDay_RestDay = employee_df.loc[(employee_df['Work Description'] == 'regular day') & (employee_df['Weekday or Weekend'] == 'Weekend'), 'Actual Gross Hours Render'].sum()
-                    RegularDay_Night_diffence_Restday = employee_df.loc[(employee_df['Work Description'] == 'regular day') & (employee_df['Weekday or Weekend'] == 'Weekend'), 'Night Difference'].sum()
-
-
-                    if overtime >= 1:
-                        RegularDay_RestDay_Overtime1 = employee_df.loc[(employee_df['Work Description'] == 'regular day') & (employee_df['Weekday or Weekend'] == 'Weekend'), 'Overtime'].sum()
-                        RegularDay_Night_diffence_Restday_Overtime = employee_df.loc[(employee_df['Work Description'] == 'regular day') & (employee_df['Weekday or Weekend'] == 'Weekend'), 'Night Difference Overtime'].sum()
-                        RegularDay_Night_diffence_Restday = RegularDay_Night_diffence_Restday - RegularDay_Night_diffence_Restday_Overtime
-                        RegularDay_RestDay_Overtime_Excess = employee_df.loc[(employee_df['Work Description'] == 'regular day') & (employee_df['Weekday or Weekend'] == 'Weekend'), 'Excess of 8 hours Overtime'].sum()
-                        RegularDay_RestDay_Overtime = RegularDay_RestDay_Overtime1 - RegularDay_RestDay_Overtime_Excess
-
-
-                        if RegularDay_RestDay_Overtime1 > RegularDay_RestDay:
-                            RegularDay_RestDay = RegularDay_RestDay_Overtime1 - RegularDay_RestDay
-
-                        elif RegularDay_RestDay_Overtime1 < RegularDay_RestDay:
-                            RegularDay_RestDay = RegularDay_RestDay - RegularDay_RestDay_Overtime1
-
-                        RegularDay_RestDay_Night_8hours = employee_df.loc[(employee_df['Work Description'] == 'regular day') & (employee_df['Weekday or Weekend'] == 'Weekend'), 'Night Difference First 8 hours'].sum()
-                        RegularDay_RestDay_Night_8hours_Excess = employee_df.loc[(employee_df['Work Description'] == 'regular day') & (employee_df['Weekday or Weekend'] == 'Weekend'), 'Night Difference Excess of 8 hours'].sum()
-
-
-                elif rest_day == 'Weekday':
-                    RegularDay = employee_df.loc[(employee_df['Work Description'] == 'regular day') & (employee_df['Weekday or Weekend'] == 'Weekday'), 'Actual Gross Hours Render'].sum()
-                    RegularDay_Night_diffence = employee_df.loc[(employee_df['Work Description'] == 'regular day') & (employee_df['Weekday or Weekend'] == 'Weekday'), 'Night Difference'].sum()
-
-                    if overtime >= 1:
-                        RegularDay_Overtime1 = employee_df.loc[(employee_df['Work Description'] == 'regular day') & (employee_df['Weekday or Weekend'] == 'Weekday'), 'Overtime'].sum()
-                        RegularDay_Night_diffence_Overtime = employee_df.loc[(employee_df['Work Description'] == 'regular day') & (employee_df['Weekday or Weekend'] == 'Weekday'), 'Night Difference Overtime'].sum()
-                        RegularDay_Night_diffence = RegularDay_Night_diffence - RegularDay_Night_diffence_Overtime
-                        RegularDay_Overtime_Excess = employee_df.loc[(employee_df['Work Description'] == 'regular day') & (employee_df['Weekday or Weekend'] == 'Weekday'), 'Excess of 8 hours Overtime'].sum()
-                        RegularDay_Overtime = RegularDay_Overtime1 - RegularDay_Overtime_Excess
-                        
-                        if RegularDay_Overtime1 > RegularDay:
-                            RegularDay = RegularDay_Overtime1 - RegularDay
-
-                        elif RegularDay_Overtime1 < RegularDay:
-                            RegularDay = RegularDay - RegularDay_Overtime1
-
-                        RegularDay_Night_8hours = employee_df.loc[(employee_df['Work Description'] == 'regular day') & (employee_df['Weekday or Weekend'] == 'Weekday'), 'Night Difference First 8 hours'].sum()
-                        RegularDay_Night_8hours_Excess = employee_df.loc[(employee_df['Work Description'] == 'regular day') & (employee_df['Weekday or Weekend'] == 'Weekday'), 'Night Difference Excess of 8 hours'].sum()
-
-            if work_desc == 'special holiday':
-                if rest_day == 'Weekend':
-                    Specialholiday_RestDay = employee_df.loc[(employee_df['Work Description'] == 'special holiday') & (employee_df['Weekday or Weekend'] == 'Weekend'), 'Actual Gross Hours Render'].sum()
-                    Specialholiday_Night_diffence_Restday = employee_df.loc[(employee_df['Work Description'] == 'special holiday') & (employee_df['Weekday or Weekend'] == 'Weekend'), 'Night Difference'].sum()
-
-                    if overtime >= 1:
-                        Specialholiday_RestDay_Overtime1 = employee_df.loc[(employee_df['Work Description'] == 'special holiday') & (employee_df['Weekday or Weekend'] == 'Weekend'), 'Overtime'].sum()
-                        Specialholiday_Night_diffence_Restday_Overtime = employee_df.loc[(employee_df['Work Description'] == 'special holiday') & (employee_df['Weekday or Weekend'] == 'Weekend'), 'Night Difference Overtime'].sum()
-                        Specialholiday_Night_diffence_Restday = Specialholiday_Night_diffence_Restday - Specialholiday_Night_diffence_Restday_Overtime
-                        Specialholiday_RestDay_Overtime_Excess = employee_df.loc[(employee_df['Work Description'] == 'special holiday') & (employee_df['Weekday or Weekend'] == 'Weekend'), 'Excess of 8 hours Overtime'].sum()
-                        Specialholiday_RestDay_Overtime = Specialholiday_RestDay_Overtime1 - Specialholiday_RestDay_Overtime_Excess
-
-                        if Specialholiday_RestDay_Overtime1 > Specialholiday_RestDay:
-                            Specialholiday_RestDay = Specialholiday_RestDay_Overtime1 - Specialholiday_RestDay
-
-                        elif Specialholiday_RestDay_Overtime1 < Specialholiday_RestDay:
-                            Specialholiday_RestDay = Specialholiday_RestDay - Specialholiday_RestDay_Overtime1
-
-                        Specialholiday_RestDay_Night_8hours = employee_df.loc[(employee_df['Work Description'] == 'special holiday') & (employee_df['Weekday or Weekend'] == 'Weekend'), 'Night Difference First 8 hours'].sum()
-                        Specialholiday_RestDay_Night_8hours_Excess = employee_df.loc[(employee_df['Work Description'] == 'special holiday') & (employee_df['Weekday or Weekend'] == 'Weekend'), 'Night Difference Excess of 8 hours'].sum()
-
-
-                elif rest_day == 'Weekday':
-                    Specialholiday = employee_df.loc[(employee_df['Work Description'] == 'special holiday') & (employee_df['Weekday or Weekend'] == 'Weekday'), 'Actual Gross Hours Render'].sum()
-                    Specialholiday_Night_diffence = employee_df.loc[(employee_df['Work Description'] == 'special holiday') & (employee_df['Weekday or Weekend'] == 'Weekday'), 'Night Difference'].sum()
-
-                    if overtime >= 1:
-                        Specialholiday_Overtime1 = employee_df.loc[(employee_df['Work Description'] == 'special holiday') & (employee_df['Weekday or Weekend'] == 'Weekday'), 'Overtime'].sum()
-                        Specialholiday_Night_diffence_Overtime = employee_df.loc[(employee_df['Work Description'] == 'special holiday') & (employee_df['Weekday or Weekend'] == 'Weekday'), 'Night Difference Overtime'].sum()
-                        Specialholiday_Night_diffence = Specialholiday_Night_diffence - Specialholiday_Night_diffence_Overtime
-                        Specialholiday_Overtime_Excess = employee_df.loc[(employee_df['Work Description'] == 'special holiday') & (employee_df['Weekday or Weekend'] == 'Weekday'), 'Excess of 8 hours Overtime'].sum()
-                        Specialholiday_Overtime = Specialholiday_Overtime1 - Specialholiday_Overtime_Excess
-
-                        if Specialholiday_Overtime1 > Specialholiday:
-                            Specialholiday = Specialholiday_Overtime1 - Specialholiday
-
-                        elif Specialholiday_Overtime1 < Specialholiday:
-                            Specialholiday = Specialholiday - Specialholiday_Overtime1
-
-                        Specialholiday_Night_8hours = employee_df.loc[(employee_df['Work Description'] == 'special holiday') & (employee_df['Weekday or Weekend'] == 'Weekday'), 'Night Difference First 8 hours'].sum()
-                        Specialholiday_Night_8hours_Excess = employee_df.loc[(employee_df['Work Description'] == 'special holiday') & (employee_df['Weekday or Weekend'] == 'Weekday'), 'Night Difference Excess of 8 hours'].sum()
-
-            if work_desc == 'legal holiday':
-                if rest_day == 'Weekend':
-                    legalholiday_RestDay = employee_df.loc[(employee_df['Work Description'] == 'legal holiday') & (employee_df['Weekday or Weekend'] == 'Weekend'), 'Actual Gross Hours Render'].sum()
-                    legalholiday_Night_diffence_Restday = employee_df.loc[(employee_df['Work Description'] == 'legal holiday') & (employee_df['Weekday or Weekend'] == 'Weekend'), 'Night Difference'].sum()
-
-                    if overtime >= 1:
-                        legalholiday_RestDay_Overtime1 = employee_df.loc[(employee_df['Work Description'] == 'legal holiday') & (employee_df['Weekday or Weekend'] == 'Weekend'), 'Overtime'].sum()
-                        legalholiday_Night_diffence_Restday_Overtime = employee_df.loc[(employee_df['Work Description'] == 'legal holiday') & (employee_df['Weekday or Weekend'] == 'Weekend'), 'Night Difference Overtime'].sum()
-                        legalholiday_Night_diffence_Restday = legalholiday_Night_diffence_Restday - legalholiday_Night_diffence_Restday_Overtime
-                        legalholiday_RestDay_Overtime_Excess = employee_df.loc[(employee_df['Work Description'] == 'legal holiday') & (employee_df['Weekday or Weekend'] == 'Weekend'), 'Excess of 8 hours Overtime'].sum()
-                        legalholiday_RestDay_Overtime = legalholiday_RestDay_Overtime1 - legalholiday_RestDay_Overtime_Excess
-
-                        if legalholiday_RestDay_Overtime1 > legalholiday_RestDay:
-                            legalholiday_RestDay = legalholiday_RestDay_Overtime1 - legalholiday_RestDay
-
-                        elif legalholiday_RestDay_Overtime1 < legalholiday_RestDay:
-                            legalholiday_RestDay = legalholiday_RestDay - legalholiday_RestDay_Overtime1
-
-                        legalholiday_RestDay_Night_8hours = employee_df.loc[(employee_df['Work Description'] == 'legal holiday') & (employee_df['Weekday or Weekend'] == 'Weekend'), 'Night Difference First 8 hours'].sum()
-                        legalholiday_RestDay_Night_8hours_Excess = employee_df.loc[(employee_df['Work Description'] == 'legal holiday') & (employee_df['Weekday or Weekend'] == 'Weekend'), 'Night Difference Excess of 8 hours'].sum()
-
-
-                elif rest_day == 'Weekday':
-                    legalholiday = employee_df.loc[(employee_df['Work Description'] == 'legal holiday') & (employee_df['Weekday or Weekend'] == 'Weekday'), 'Actual Gross Hours Render'].sum()
-                    legalholiday_Night_diffence = employee_df.loc[(employee_df['Work Description'] == 'legal holiday') & (employee_df['Weekday or Weekend'] == 'Weekday'), 'Night Difference'].sum()
-
-                    if overtime >= 1:
-                        legalholiday_Overtime1 = employee_df.loc[(employee_df['Work Description'] == 'legal holiday') & (employee_df['Weekday or Weekend'] == 'Weekday'), 'Overtime'].sum()
-                        legalholiday_Night_diffence_Overtime = employee_df.loc[(employee_df['Work Description'] == 'legal holiday') & (employee_df[
-                                                                                      'Weekday or Weekend'] == 'Weekday'), 'Night Difference Overtime'].sum()
-                        legalholiday_Night_diffence = legalholiday_Night_diffence - legalholiday_Night_diffence_Overtime
-                        legalholiday_Overtime_Excess = employee_df.loc[(employee_df['Work Description'] == 'legal holiday') & (employee_df['Weekday or Weekend'] == 'Weekday'), 'Excess of 8 hours Overtime'].sum()
-                        legalholiday_Overtime = legalholiday_Overtime1 - legalholiday_Overtime_Excess
-
-                        if legalholiday_Overtime1 > legalholiday:
-                            legalholiday = legalholiday_Overtime1 - legalholiday
-
-                        elif legalholiday_Overtime1 < legalholiday:
-                            legalholiday = legalholiday - legalholiday_Overtime1
-
-                        legalholiday_Night_8hours = employee_df.loc[(employee_df['Work Description'] == 'legal holiday') & (employee_df['Weekday or Weekend'] == 'Weekday'), 'Night Difference First 8 hours'].sum()
-                        legalholiday_Night_8hours_Excess = employee_df.loc[(employee_df['Work Description'] == 'legal holiday') & (employee_df['Weekday or Weekend'] == 'Weekday'), 'Night Difference Excess of 8 hours'].sum()
+            total_working_days = len(employee_df.loc[(employee_df['Work Description'] == 'regular day') & (employee_df['Weekday or Weekend'] == 'Weekday'), 'Employee Code'])
+            working_hours1 = employee_df.loc[(employee_df['Work Description'] == 'regular day') & (employee_df['Weekday or Weekend'] == 'Weekday'), 'Actual Gross Hours Render'].sum()
+            tardiness1 = employee_df.loc[(employee_df['Work Description'] == 'regular day') & (employee_df['Weekday or Weekend'] == 'Weekday'), 'Tardiness'].sum()
+            RegularDay_Overtime = employee_df['Total of 8 hours Overtime'].sum()
+            RegularDay_Overtime_Excess = employee_df['Excess of 8 hours Overtime'].sum()
+            RegularDay_RestDay = employee_df['RestDay Overtime for the 1st 8hrs'].sum()
+            RegularDay_RestDay_Overtime = employee_df['Rest Day Overtime in Excess of 8hrs'].sum()
+            RegularDay_RestDay_Overtime_Excess = employee_df['Rest Day Overtime in Excess of 8hrs'].sum()
+            Specialholiday = employee_df['Special Holiday'].sum()
+            Specialholiday_Overtime = employee_df['Special Holiday_1st 8hours'].sum()
+            Specialholiday_Overtime_Excess = employee_df['Special Holiday_Excess of 8hrs'].sum()
+            Specialholiday_RestDay_Overtime = employee_df['Special Holiday Falling on restday 1st 8hrs'].sum()
+            legalholiday = employee_df['Legal Holiday'].sum()
+            legalholiday_Overtime = employee_df['Legal Holiday_1st 8hours'].sum()
+            legalholiday_Overtime_Excess = employee_df['Legal Holiday_Excess of 8hrs'].sum()
+            legalholiday_RestDay_Overtime = employee_df['Legal Holiday Falling on Rest Day_1st 8hrs'].sum()
+            legalholiday_RestDay_Overtime_Excess = employee_df['Legal Holiday Falling on Rest Day_Excess of 8hrs'].sum()
+            RegularDay_Night_8hours = employee_df['Night Differential Regular Days_1st 8hrs'].sum()
+            RegularDay_Night_8hours_Excess = employee_df['Night Differential Falling on Rest Day_1st 8hrs'].sum()
+            RegularDay_RestDay_Night_8hours = employee_df['Night Differential Falling on Rest Day_Excess of 8hrs'].sum()
+            RegularDay_RestDay_Night_8hours_Excess = employee_df['Night Differential falling on Special Holiday'].sum()
+            Specialholiday_RestDay_Night_8hours = employee_df['Night Differential Falling on SPHOL rest day 1st 8 hr'].sum()
+            Specialholiday_RestDay_Night_8hours_Excess = employee_df['Night Differential SH falling on RD_EX8'].sum()
+            legalholiday_Night_diffence = employee_df['Night Differential on Legal Holidays falling on Rest Days'].sum()
+            legalholiday_Night_8hours = employee_df['Night Differential on Legal Holidays_1st 8hrs'].sum()
+            legalholiday_Night_8hours_Excess = employee_df['Night Differential on Legal Holidays_Excess of 8hrs'].sum()
+            Specialholiday_Night_diffence = employee_df['Night Differential Falling on SPHOL rest day 1st 8 hr'].sum()
+            Specialholiday_Night_8hours_Excess = employee_df['Night Differential SH_EX8'].sum()
 
         new_df = pd.DataFrame({'Employee_Code': [employee_code],
                                'Employee_Name': [name],
