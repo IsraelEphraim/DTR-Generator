@@ -735,9 +735,8 @@ def upload():
 
     # Read the DataFrame
     df = pd.read_csv('dtr.csv')
-
-
     delete_duplicate(df)
+
     return render_template('index.html', dtr=dtr)
 
 @app.route('/submit', methods=['POST'])
@@ -938,8 +937,25 @@ def save_all_rows():
     df.to_csv('dtr.csv', index=False)
     return redirect(url_for('table'))
 
+@app.route('/checkcsv')
+def check_csv():
+    try:
+        df = pd.read_csv('dtr.csv')
+        empty = df.empty
+    except FileNotFoundError:
+        empty = True
+    except KeyError:
+        empty = False
+        key_error = True
+    else:
+        empty = False
+        key_error = False
 
-
+    response = {
+        'empty': empty,
+        'keyError': key_error if 'key_error' in locals() else False
+    }
+    return json.dumps(response)
 
 @app.route('/download')
 def download():
