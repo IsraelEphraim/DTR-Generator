@@ -27,7 +27,7 @@
           width: 60px;
           height: 60px;
           bottom: 40px;
-          left: 20px;
+          right: 20px;
           background-color: black;
           border-radius: 10px;
           border: solid black;
@@ -64,10 +64,16 @@
 </head>
 <body>
     <div class="container mt-5" style="margin: 0px">
-        <div class="form-group">
+        <div style="display: flex; justify-content: space-between;">
+            <div class="form-group">
             <label for="search">Search:</label>
-            <input type="text" class="form-control" id="search">
+            <input type="text" class="form-control" id="search" style="width: 300%;">
+            </div>
+            <div>
+                <a href="{{ url_for('index') }}" class="btn btn-primary">Go to Home</a>
+            </div>
         </div>
+        
         <div class="summary-table" >
             {{ summary|safe }}
         </div>

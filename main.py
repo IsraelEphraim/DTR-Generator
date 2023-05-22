@@ -1,3 +1,4 @@
+import json
 import os
 from flask import Flask, render_template, request, redirect, send_file, jsonify, url_for
 import pandas as pd
@@ -184,7 +185,7 @@ def calculate_timeanddate(employee_name, employee_code, day_of_week, date_transa
     # ITO YUNG TOTAL BOSS
     total_actual_datetime_in_out =  actual_datetime_timeout - actual_datetime_timein
     total_actual_datetime_in_out_int = timedelta_to_decimal(total_actual_datetime_in_out)
-    print(total_actual_datetime_in_out_int)
+
     #=====================================================================
     #NON CHARGEABLE BREAK
     break_start = '12:00'
@@ -734,6 +735,7 @@ def upload():
 
     # Read the DataFrame
     df = pd.read_csv('dtr.csv')
+
 
     delete_duplicate(df)
     return render_template('index.html', dtr=dtr)

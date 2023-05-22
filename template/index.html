@@ -137,16 +137,22 @@
             <button type="submit" name="/delete_data">Delete Data</button>
         </form>
 
+
         
     </div>
 
     <div style="float: center; Padding-left: 500px">
         <h3>Upload Excel File</h3>
-	    <form method="post" action="/upload" enctype="multipart/form-data">
-		    <input type="file" name="file">
-		    <input type="submit" value="Upload">
-	    </form>
+	    <form method="post" action="/upload" enctype="multipart/form-data" onsubmit="event.preventDefault(); handleFileUpload();">
+            <input type="file" name="file">
+            <input type="submit" value="Upload">
+        </form>
 
+        <div id="loading-dialog" style="display: none;">
+            <h4>Loading...</h4>
+        </div>
+
+        
         <br><br>
 
         <h3>Download Summary</h3>
@@ -157,12 +163,43 @@
 
         <br><br><br><br>
 
-        <a href="{{ url_for('table') }}" class="btn btn-primary" target="_blank">Go to table</a>
+        <a href="{{ url_for('table') }}" class="btn btn-primary">Go to table</a>
 
 
     </div>
 
 
+<script>
+    // Function to handle file upload
+    function handleFileUpload() {
+        var fileInput = document.querySelector('input[name="file"]');
+        var file = fileInput.files[0];
+
+        // Create a FormData object and append the file
+        var formData = new FormData();
+        formData.append('file', file);
+
+        // Show the loading dialog
+        var loadingDialog = document.getElementById('loading-dialog');
+        loadingDialog.style.display = 'block';
+
+        // Send an AJAX request to upload the file
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/upload');
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                // Hide the loading dialog
+                loadingDialog.style.display = 'none';
+                // Redirect to the table page
+                window.location.href = "{{ url_for('table') }}";
+            } else {
+                // Handle the error case
+                alert('Error uploading file');
+            }
+        };
+        xhr.send(formData);
+    }
+</script>
 
 
 <script>
@@ -300,6 +337,7 @@
         localStorage.setItem('scrollPosition', window.pageYOffset);
     }
 </script>
+
 
 </body>
 </html>
