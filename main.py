@@ -1,10 +1,12 @@
 import json
 import os
+import webbrowser
 from flask import Flask, render_template, request, redirect, send_file, jsonify, url_for
 import pandas as pd
 from datetime import datetime, timedelta, time
 import webview
 import sys
+from openpyxl.reader.excel import load_workbook
 
 base_dir = '.'
 if hasattr(sys, '_MEIPASS'):
@@ -13,7 +15,7 @@ if hasattr(sys, '_MEIPASS'):
 port = int(os.environ.get('PORT', 9000))
 
 app = Flask(__name__, template_folder=os.path.join(base_dir, 'template'))
-window = webview.create_window('DTR Generator', app)
+
 
 def delete_duplicate(df):
     df.drop_duplicates(subset=['Employee Code', 'Date'], inplace=True)
@@ -69,52 +71,6 @@ def index():
                                     'Night Differential on Legal Holidays falling on Rest Days'
                                     ])
 
-    # Read the DataFrame
-    try:
-        df = pd.read_csv('dtr.csv')
-    except FileNotFoundError:
-        df = pd.DataFrame(columns=['Status',
-                                    'Overtime',
-                                    'Employee Code',
-                                    'Employee Name',
-                                    'Date',
-                                    'Day',
-                                    'Weekday or Weekend',
-                                    'Work Description',
-                                    'Time In',
-                                    'Time Out',
-                                    'Actual Time In',
-                                    'Actual Time Out',
-                                    'Net Hours Rendered (Time Format)',
-                                    'Actual Gross Hours Render',
-                                    'Hours Rendered',
-                                    'Undertime Hours',
-                                    'Tardiness',
-                                    'Excess of 8 hours Overtime',
-                                    'Total of 8 hours Overtime',
-                                    'RestDay Overtime for the 1st 8hrs',
-                                    'Rest Day Overtime in Excess of 8hrs',
-                                    'Special Holiday',
-                                    'Special Holiday_1st 8hours',
-                                    'Special Holiday_Excess of 8hrs',
-                                    'Special Holiday Falling on restday 1st 8hrs',
-                                    'Special Holiday on restday Excess 8Hrs',
-                                    'Legal Holiday',
-                                    'Legal Holiday_1st 8hours',
-                                    'Legal Holiday_Excess of 8hrs',
-                                    'Legal Holiday Falling on Rest Day_1st 8hrs',
-                                    'Legal Holiday Falling on Rest Day_Excess of 8hrs',
-                                    'Night Differential Regular Days_1st 8hrs',
-                                    'Night Differential Regular Days_Excess of 8hrs',
-                                    'Night Differential Falling on Rest Day_1st 8hrs',
-                                    'Night Differential Falling on Rest Day_Excess of 8hrs',
-                                    'Night Differential falling on Special Holiday',
-                                    'Night Differential SH_EX8',
-                                    'Night Differential Falling on SPHOL rest day 1st 8 hr',
-                                    'Night Differential SH falling on RD_EX8',
-                                    'Night Differential on Legal Holidays_1st 8hrs',
-                                    'Night Differential on Legal Holidays_Excess of 8hrs',
-                                    'Night Differential on Legal Holidays falling on Rest Days'])
 
     return render_template('index.html', dtr=dtr)
 
@@ -939,6 +895,7 @@ def save_all_rows():
 
 @app.route('/checkcsv')
 def check_csv():
+    key_error = True
     try:
         df = pd.read_csv('dtr.csv')
         empty = df.empty
@@ -959,48 +916,58 @@ def check_csv():
 
 @app.route('/download')
 def download():
-    # Step 1: Read input file into a DataFrame
 
     try:
         df = pd.read_csv('dtr.csv')
     except FileNotFoundError:
-        df = pd.DataFrame(columns=['Employee_Code',
-                                   'Employee_Name',
-                                   'No. of Working Days',
-                                   'Number of Working Hours',
-                                   'Tardiness/Undertime',
-                                   'No. of Days Absent',
-                                   'ROT_125',
-                                   'Regular OT 100',
-                                   'Rest Day',
-                                   'RestDay Overtime for the 1st 8hrs',
-                                   'Rest Day Overtime in Excess of 8hrs',
-                                   'Special Holiday',
-                                   'Special Holiday_1st 8hrs',
-                                   'Special Holiday_Excess of 8hrs',
-                                   'Special Holiday Falling on restday 1st 8hrs',
-                                   'Legal Holiday',
-                                   'Legal Holiday_1st 8hrs',
-                                   'Legal Holiday_Excess of 8hrs',
-                                   'Legal Holiday Falling on Rest Day_1st 8hrs',
-                                   'Legal Holiday Falling on Rest Day_Excess of 8hrs',
-                                   'Night Differential Regular Days_1st 8hrs',
-                                   'Night Differential Regular Days_Excess of 8hrs',
-                                   'Night Differential Falling on Rest Day_1st 8hrs',
-                                   'Night Differential Falling on Rest Day_Excess of 8hrs',
-                                   'Night Differential Falling on SPHOL rest day 1st 8 hr',
-                                   'Night Differential SH falling on RD_EX8',
-                                   'Night Differential on Legal Holidays falling on Rest Days',
-                                   'Night Differential on Legal Holidays_1st 8hrs',
-                                   'Night Differential on Legal Holidays_Excess of 8hrs',
-                                   'Night Differential falling on Special Holiday',
-                                   'Night Differential SH_EX8'])
+        df = pd.DataFrame(columns=['Status',
+                                    'Overtime',
+                                    'Employee Code',
+                                    'Employee Name',
+                                    'Date',
+                                    'Day',
+                                    'Weekday or Weekend',
+                                    'Work Description',
+                                    'Time In',
+                                    'Time Out',
+                                    'Actual Time In',
+                                    'Actual Time Out',
+                                    'Net Hours Rendered (Time Format)',
+                                    'Actual Gross Hours Render',
+                                    'Hours Rendered',
+                                    'Undertime Hours',
+                                    'Tardiness',
+                                    'Excess of 8 hours Overtime',
+                                    'Total of 8 hours Overtime',
+                                    'RestDay Overtime for the 1st 8hrs',
+                                    'Rest Day Overtime in Excess of 8hrs',
+                                    'Special Holiday',
+                                    'Special Holiday_1st 8hours',
+                                    'Special Holiday_Excess of 8hrs',
+                                    'Special Holiday Falling on restday 1st 8hrs',
+                                    'Special Holiday on restday Excess 8Hrs',
+                                    'Legal Holiday',
+                                    'Legal Holiday_1st 8hours',
+                                    'Legal Holiday_Excess of 8hrs',
+                                    'Legal Holiday Falling on Rest Day_1st 8hrs',
+                                    'Legal Holiday Falling on Rest Day_Excess of 8hrs',
+                                    'Night Differential Regular Days_1st 8hrs',
+                                    'Night Differential Regular Days_Excess of 8hrs',
+                                    'Night Differential Falling on Rest Day_1st 8hrs',
+                                    'Night Differential Falling on Rest Day_Excess of 8hrs',
+                                    'Night Differential falling on Special Holiday',
+                                    'Night Differential SH_EX8',
+                                    'Night Differential Falling on SPHOL rest day 1st 8 hr',
+                                    'Night Differential SH falling on RD_EX8',
+                                    'Night Differential on Legal Holidays_1st 8hrs',
+                                    'Night Differential on Legal Holidays_Excess of 8hrs',
+                                    'Night Differential on Legal Holidays falling on Rest Days'
+                                    ])
 
 
     file_name = 'DTR_Summary.csv'
     if os.path.exists(file_name):
         os.remove(file_name)
-
 
     # Step 4: Compute overtime for each employee
     for code in df['Employee Name'].unique():
@@ -1033,6 +1000,7 @@ def download():
         Specialholiday_Overtime = 0
         Specialholiday_Overtime_Excess = 0
         Specialholiday_RestDay_Overtime = 0
+        Specialholiday_Restday_Overtime_Excess = 0
         legalholiday = 0
         legalholiday_Overtime = 0
         legalholiday_Overtime_Excess = 0
@@ -1066,6 +1034,7 @@ def download():
             Specialholiday_Overtime = employee_df['Special Holiday_1st 8hours'].sum()
             Specialholiday_Overtime_Excess = employee_df['Special Holiday_Excess of 8hrs'].sum()
             Specialholiday_RestDay_Overtime = employee_df['Special Holiday Falling on restday 1st 8hrs'].sum()
+            Specialholiday_Restday_Overtime_Excess = employee_df['Special Holiday on restday Excess 8Hrs'].sum()
             legalholiday = employee_df['Legal Holiday'].sum()
             legalholiday_Overtime = employee_df['Legal Holiday_1st 8hours'].sum()
             legalholiday_Overtime_Excess = employee_df['Legal Holiday_Excess of 8hrs'].sum()
@@ -1097,6 +1066,7 @@ def download():
                                 'Special Holiday_1st 8hrs':[Specialholiday_Overtime],
                                 'Special Holiday_Excess of 8hrs':[Specialholiday_Overtime_Excess],
                                 'Special Holiday Falling on restday 1st 8hrs':[Specialholiday_RestDay_Overtime],
+                                'Special Holiday Excess 8Hrs': [Specialholiday_Restday_Overtime_Excess ],
                                 'Legal Holiday':[legalholiday],
                                 'Legal Holiday_1st 8hrs':[legalholiday_Overtime],
                                 'Legal Holiday_Excess of 8hrs':[legalholiday_Overtime_Excess],
@@ -1132,6 +1102,7 @@ def download():
                                                 'Special Holiday_1st 8hrs',
                                                 'Special Holiday_Excess of 8hrs',
                                                 'Special Holiday Falling on restday 1st 8hrs',
+                                                'Special Holiday Excess 8Hrs',
                                                 'Legal Holiday',
                                                 'Legal Holiday_1st 8hrs',
                                                 'Legal Holiday_Excess of 8hrs',
@@ -1154,42 +1125,76 @@ def download():
         add_df = new_df.sort_values(by=['Employee_Name'])
         add_df.to_csv('DTR_Summary.csv', index=False)
 
-    try:
-        csv_excel = pd.read_csv('DTR_Summary.csv')
-    except FileNotFoundError:
-        csv_excel = pd.DataFrame(columns=['Employee_Code',
-                                            'Employee_Name',
-                                            'Regular_Day',
-                                            'RegularDay_Overtime',
-                                            'RegularDay_RestDay',
-                                            'RegularDay_RestDay_Overtime',
-                                            'RegularDay_Night_diffence',
-                                            'RegularDay_Night_diffence_Overtime',
-                                            'RegularDay_Night_diffence_Restday',
-                                            'RegularDay_Night_diffence_Restday_Overtime',
-                                            'Legal_Holiday',
-                                            'Legal_Holiday_Overtime',
-                                            'Legal_Holiday_RestDay',
-                                            'Legal_Holiday_RestDay_Overtime',
-                                            'Legal_Holiday_Night_diffence',
-                                            'Legal_Holiday_Night_diffence_Overtime',
-                                            'Legal_Holiday_Night_diffence_Restday',
-                                            'Legal_Holiday_Night_diffence_Restday_Overtime',
-                                            'Special_Holiday',
-                                            'Special_Holiday_Overtime',
-                                            'Special_Holiday_RestDay',
-                                            'Special_Holiday_RestDay_Overtime',
-                                            'Special_Holiday_Night_diffence',
-                                            'Special_Holiday_Night_diffence_Overtime',
-                                            'Special_Holiday_Night_diffence_Restday',
-                                            'Special_Holiday_Night_diffence_Restday_Overtime'])
+
+    csv_excel = pd.read_csv('DTR_Summary.csv')
+
     csv_excel.to_excel('DTR_Summary.xlsx', index=False)
 
+
+    dfexcel = pd.read_csv('DTR_Summary.csv')
+
+    # Step 2: Load the existing Excel file
+    excel_file_path = 'excel_temp.xlsx'  # Replace with the path to your existing Excel file
+    wb = load_workbook(excel_file_path)
+    ws = wb.active
+
+    # Step 3: Transfer the CSV values to specific cells in the Excel file
+    # Specify the target cells where you want to transfer the values
+    cell_mapping = {
+        'Employee_Code': 'A6',
+        'Employee_Name': 'B6',
+        'No. of Working Days': 'J6',
+        'Number of Working Hours': 'K6',
+        'Tardiness/Undertime': 'L6',
+        'No. of Days Absent': 'M6',
+        'ROT_125': 'N6',
+        'Regular OT 100': 'O6',
+        'Rest Day': 'P6',
+        'RestDay Overtime for the 1st 8hrs': 'Q6',
+        'Rest Day Overtime in Excess of 8hrs': 'R6',
+        'Special Holiday': 'S6',
+        'Special Holiday_1st 8hrs': 'T6',
+        'Special Holiday_Excess of 8hrs': 'U6',
+        'Special Holiday Falling on restday 1st 8hrs': 'V6',
+        'Special Holiday Excess 8Hrs': 'W6',
+        'Legal Holiday': 'X6',
+        'Legal Holiday_1st 8hrs': 'Y6',
+        'Legal Holiday_Excess of 8hrs': 'Z6',
+        'Legal Holiday Falling on Rest Day_1st 8hrs': 'AA6',
+        'Legal Holiday Falling on Rest Day_Excess of 8hrs': 'AB6',
+        'Night Differential Regular Days_1st 8hrs': 'AC6',
+        'Night Differential Regular Days_Excess of 8hrs': 'AD6',
+        'Night Differential Falling on Rest Day_1st 8hrs': 'AE6',
+        'Night Differential Falling on Rest Day_Excess of 8hrs': 'AF6',
+        'Night Differential Falling on SPHOL rest day 1st 8 hr': 'AG6',
+        'Night Differential on Legal Holidays falling on Rest Days': 'AH6',
+        'Night Differential on Legal Holidays_1st 8hrs': 'AI6',
+        'Night Differential on Legal Holidays_Excess of 8hrs': 'AJ6',
+        'Night Differential SH falling on RD_EX8': 'AK6',
+        'Night Differential falling on Special Holiday': 'AL6',
+        'Night Differential SH_EX8': 'AM6'
+    }
+
+    for column, cell in cell_mapping.items():
+        if column in dfexcel.columns:
+            values = dfexcel[column].values
+            for row, value in enumerate(values, start=6):
+                ws[cell.replace('6', str(row))] = value
+
+    # Step 4: Save the modified Excel file
+    output_file_path = 'excel_temp.xlsx'  # Replace with the desired path for the modified file
+    wb.save(output_file_path)
+
+
+
+
     # Download the new CSV file
-    return send_file('DTR_Summary.xlsx', as_attachment=True)
+    return send_file('excel_temp.xlsx', as_attachment=True)
 
 
 
 if __name__ == '__main__':
-    app.run(debug=True ,use_reloader=True, port=port)
-    # webview.start()
+    url = f'http://localhost:{port}'
+    # Open the web page in the default browser
+    webbrowser.open(url)
+    app.run(use_reloader=True, port=port)

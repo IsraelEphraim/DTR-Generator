@@ -165,9 +165,19 @@
 
         <h3>Download Summary</h3>
         <p>Click the button to download the CSV file:</p>
-        <a href="/download"><button>Download Excel</button></a>
+        <a href="/download" onclick="checkCSV();"><button>Download Excel</button></a>
 
-        
+        <script>
+           function checkCSV() {
+                fetch('/checkcsv')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.empty || data.keyError) {
+                            alert('The CSV file is empty or contains a KeyError. Please check the file.');
+                        }
+                    });
+            }
+        </script>
 
         <br><br><br><br>
 
