@@ -5,7 +5,6 @@
     <!-- Include Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
     <style>
-        /* Add sticky header to table */
         #table thead th {
             position: sticky;
             top: 0;
@@ -48,6 +47,9 @@
         body {
             margin: 0px;
             padding: 0px;
+            background-image: url("{{ url_for('static', filename='Photos/NInaMarie_Background2.jpg') }}";
+            background-repeat: no-repeat;
+            background-size: cover;
             }
         .table-container {
             position: relative;

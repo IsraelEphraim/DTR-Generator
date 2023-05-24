@@ -6,6 +6,12 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.14.0/css/bootstrap-select.min.css">
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
     <style>
+        body {
+                background-image: url("{{ url_for('static', filename='Photos/NInaMarie_Background2.jpg') }}");
+                background-repeat: no-repeat;
+                background-size: cover;
+            }
+
       table.data {
         border-collapse: collapse;
         border-spacing: 0;
@@ -62,6 +68,18 @@
             border-block: 10px solid red;
             padding: 10px;
             margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+        .logo {
+            max-width: 100px;
+            height: auto;
+        }
+        .title {
+            font-size: 24px; /* Adjust the font size as needed */
+        }
+        .logo-container {
+            margin-right: 10px; /* Adjust the margin as needed */
         }
 
     </style>
@@ -69,7 +87,10 @@
 </head>
 <body>
     <header class="header">
-        <h1>DTR Generator</h1>
+        <div class="logo-container">
+            <img src="{{ url_for('static', filename='Photos/HD_TOPSERVE.png') }}" alt="Logo" class="logo">
+        </div>
+        <h1 class="title">DTR Generator</h1>
     </header>
     <div style="float: left; margin-left: 20px">
         <h3>Input Employee Data</h3>
@@ -165,19 +186,8 @@
 
         <h3>Download Summary</h3>
         <p>Click the button to download the CSV file:</p>
-        <a href="/download" onclick="checkCSV();"><button>Download Excel</button></a>
+        <a href="/download"><button id="downloadButton">Download Excel</button></a>
 
-        <script>
-           function checkCSV() {
-                fetch('/checkcsv')
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.empty || data.keyError) {
-                            alert('The CSV file is empty or contains a KeyError. Please check the file.');
-                        }
-                    });
-            }
-        </script>
 
         <br><br><br><br>
 

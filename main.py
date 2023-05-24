@@ -4,7 +4,9 @@ import webbrowser
 from flask import Flask, render_template, request, redirect, send_file, jsonify, url_for
 import pandas as pd
 from datetime import datetime, timedelta, time
+import threading
 import webview
+import platform
 import sys
 from openpyxl.reader.excel import load_workbook
 
@@ -15,6 +17,10 @@ if hasattr(sys, '_MEIPASS'):
 port = int(os.environ.get('PORT', 9000))
 
 app = Flask(__name__, template_folder=os.path.join(base_dir, 'template'))
+
+def open_browser(url):
+    # Open the web page in the default browser
+    webbrowser.open(url)
 
 
 def delete_duplicate(df):
@@ -916,6 +922,9 @@ def check_csv():
 
 @app.route('/download')
 def download():
+    file_name1 = 'DTR_excel.xlsx'
+    if os.path.exists(file_name1):
+        os.remove(file_name1)
 
     try:
         df = pd.read_csv('dtr.csv')
@@ -968,6 +977,8 @@ def download():
     file_name = 'DTR_Summary.csv'
     if os.path.exists(file_name):
         os.remove(file_name)
+
+
 
     # Step 4: Compute overtime for each employee
     for code in df['Employee Name'].unique():
@@ -1057,8 +1068,8 @@ def download():
                                'No. of Working Days': [total_working_days],
                                'Number of Working Hours': [working_hours1],
                                'Tardiness/Undertime': [tardiness1],
-                               'ROT_125': [RegularDay_Overtime],
-                               'Regular OT 100': [RegularDay_Overtime_Excess],
+                               'ROT_125': [RegularDay_Overtime_Excess],
+                               'Regular OT 100': [RegularDay_Overtime],
                                'Rest Day': [RegularDay_RestDay],
                                'RestDay Overtime for the 1st 8hrs': [RegularDay_RestDay_Overtime],
                                'Rest Day Overtime in Excess of 8hrs': [RegularDay_RestDay_Overtime_Excess],
@@ -1125,18 +1136,47 @@ def download():
         add_df = new_df.sort_values(by=['Employee_Name'])
         add_df.to_csv('DTR_Summary.csv', index=False)
 
-
-    csv_excel = pd.read_csv('DTR_Summary.csv')
-
-    csv_excel.to_excel('DTR_Summary.xlsx', index=False)
-
-
-    dfexcel = pd.read_csv('DTR_Summary.csv')
+    try:
+        dfexcel = pd.read_csv('DTR_Summary.csv')
+    except FileNotFoundError:
+        dfexcel = pd.DataFrame(columns=['Employee_Code',
+                                            'Employee_Name',
+                                            'No. of Working Days',
+                                            'Number of Working Hours',
+                                            'Tardiness/Undertime',
+                                            'No. of Days Absent',
+                                            'ROT_125',
+                                            'Regular OT 100',
+                                            'Rest Day',
+                                            'RestDay Overtime for the 1st 8hrs',
+                                            'Rest Day Overtime in Excess of 8hrs',
+                                            'Special Holiday',
+                                            'Special Holiday_1st 8hrs',
+                                            'Special Holiday_Excess of 8hrs',
+                                            'Special Holiday Falling on restday 1st 8hrs',
+                                            'Special Holiday Excess 8Hrs',
+                                            'Legal Holiday',
+                                            'Legal Holiday_1st 8hrs',
+                                            'Legal Holiday_Excess of 8hrs',
+                                            'Legal Holiday Falling on Rest Day_1st 8hrs',
+                                            'Legal Holiday Falling on Rest Day_Excess of 8hrs',
+                                            'Night Differential Regular Days_1st 8hrs',
+                                            'Night Differential Regular Days_Excess of 8hrs',
+                                            'Night Differential Falling on Rest Day_1st 8hrs',
+                                            'Night Differential Falling on Rest Day_Excess of 8hrs',
+                                            'Night Differential Falling on SPHOL rest day 1st 8 hr',
+                                            'Night Differential SH falling on RD_EX8',
+                                            'Night Differential on Legal Holidays falling on Rest Days',
+                                            'Night Differential on Legal Holidays_1st 8hrs',
+                                            'Night Differential on Legal Holidays_Excess of 8hrs',
+                                            'Night Differential falling on Special Holiday',
+                                            'Night Differential SH_EX8'
+                                            ])
 
     # Step 2: Load the existing Excel file
-    excel_file_path = 'excel_temp.xlsx'  # Replace with the path to your existing Excel file
-    wb = load_workbook(excel_file_path)
-    ws = wb.active
+    template_file_path = 'excel_temp.xlsx'  # Replace with the path to your template Excel file
+    template_wb = load_workbook(template_file_path)
+    template_ws = template_wb.active
 
     # Step 3: Transfer the CSV values to specific cells in the Excel file
     # Specify the target cells where you want to transfer the values
@@ -1179,22 +1219,35 @@ def download():
         if column in dfexcel.columns:
             values = dfexcel[column].values
             for row, value in enumerate(values, start=6):
-                ws[cell.replace('6', str(row))] = value
+                template_ws[cell.replace('6', str(row))] = value
 
     # Step 4: Save the modified Excel file
-    output_file_path = 'excel_temp.xlsx'  # Replace with the desired path for the modified file
-    wb.save(output_file_path)
+    output_file_path = 'DTR_excel.xlsx'  # Replace with the desired path for the modified file
+    template_wb.save(output_file_path)
 
 
 
 
     # Download the new CSV file
-    return send_file('excel_temp.xlsx', as_attachment=True)
-
+    return send_file('DTR_excel.xlsx', as_attachment=True)
 
 
 if __name__ == '__main__':
-    url = f'http://localhost:{port}'
-    # Open the web page in the default browser
-    webbrowser.open(url)
-    app.run(use_reloader=True, port=port)
+
+    operating_system = platform.system()
+
+    # Set the URL based on the operating system
+    if operating_system == 'Windows':
+        url = f'http://localhost:{port}'
+    elif operating_system == 'Darwin':  # macOS
+        url = f'http://localhost:{port}'
+    elif operating_system == 'Linux':
+        url = f'http://localhost:{port}'
+    else:
+        raise NotImplementedError(f'Unsupported operating system: {operating_system}')
+
+    # Create a new thread to open the browser
+    browser_thread = threading.Thread(target=open_browser, args=(url,))
+    browser_thread.start()
+
+    app.run(use_reloader=False, port=port)
