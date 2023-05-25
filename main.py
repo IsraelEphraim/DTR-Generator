@@ -9,6 +9,7 @@ import webview
 import platform
 import sys
 from openpyxl.reader.excel import load_workbook
+import xlrd
 
 base_dir = '.'
 if hasattr(sys, '_MEIPASS'):
@@ -1222,14 +1223,14 @@ def download():
                 template_ws[cell.replace('6', str(row))] = value
 
     # Step 4: Save the modified Excel file
-    output_file_path = 'DTR_excel.xlsx'  # Replace with the desired path for the modified file
+    output_file_path = 'DTR_excel.xls'  # Replace with the desired path for the modified file
     template_wb.save(output_file_path)
 
 
 
 
     # Download the new CSV file
-    return send_file('DTR_excel.xlsx', as_attachment=True)
+    return send_file('DTR_excel.xls', as_attachment=True)
 
 
 if __name__ == '__main__':
