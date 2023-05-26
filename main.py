@@ -1,7 +1,7 @@
 import json
 import os
 import webbrowser
-from flask import Flask, render_template, request, redirect, send_file, jsonify, url_for
+from flask import Flask, render_template, request, redirect, send_file, jsonify, url_for, flash
 import pandas as pd
 from datetime import datetime, timedelta, time
 import threading
@@ -10,6 +10,7 @@ import platform
 import sys
 from openpyxl.reader.excel import load_workbook
 import xlrd
+import traceback
 
 base_dir = '.'
 if hasattr(sys, '_MEIPASS'):
@@ -18,7 +19,7 @@ if hasattr(sys, '_MEIPASS'):
 port = int(os.environ.get('PORT', 9000))
 
 app = Flask(__name__, template_folder=os.path.join(base_dir, 'template'))
-
+app.secret_key = 'topserve_dtr_generator'
 def open_browser(url):
     # Open the web page in the default browser
     webbrowser.open(url)
@@ -601,12 +602,13 @@ def calculate_timeanddate(employee_name, employee_code, day_of_week, date_transa
 
 @app.route('/upload', methods=['POST'])
 def upload():
-    # Get the uploaded file
-    uploaded_file = request.files['file']
-    # Read the Excel file into a pandas dataframe
-    df = pd.read_excel(uploaded_file, header=[0], engine='openpyxl')
+    try:
+        # Get the uploaded file
+        uploaded_file = request.files['file']
+        # Read the Excel file into a pandas dataframe
+        df = pd.read_excel(uploaded_file, header=[0], engine='openpyxl')
 
-    dtr = pd.DataFrame(columns=['Status',
+        dtr = pd.DataFrame(columns=['Status',
                                     'Overtime',
                                     'Employee Code',
                                     'Employee Name',
@@ -649,58 +651,69 @@ def upload():
                                     'Night Differential on Legal Holidays_Excess of 8hrs',
                                     'Night Differential on Legal Holidays falling on Rest Days'])
 
-    for i, row in df.iterrows():
-        # Employee inputs
-        employee_name = row['Employee Name'].upper()
-        employee_code = row['Employee Code'].upper()
+        for i, row in df.iterrows():
+            # Employee inputs
+            employee_name = row['Employee Name'].upper()
+            employee_code = row['Employee Code'].upper()
 
-
-        # Date of transaction
-        date_transact = str(row['Date'])
-        day_of_week = ""
-        date_transact1 = ""
-        if date_transact is not None:
-            date_obj = datetime.strptime(date_transact, "%Y-%m-%d %H:%M:%S")
-            date_transact1 = date_obj.date()
-            day_of_week = date_obj.strftime("%A")
-        else:
+            # Date of transaction
             date_obj = ""
-            # Handle the case where the date is missing or empty
+            try:
+                date_transact = str(row['Date'])
+                day_of_week = ""
+                date_transact1 = ""
+                if date_transact is not None:
+                    date_obj = datetime.strptime(date_transact, "%Y-%m-%d %H:%M:%S")
+                    date_transact1 = date_obj.date()
+                    day_of_week = date_obj.strftime("%A")
+                else:
+                    date_obj = ""
+            except Exception:
+                # Handle the exception and pass the error message to the template
+                error_message = f"Invalid value {date_obj} in the Date column. Allowed format dd/mm/yyyy."
+                traceback.print_exc()  # Print the traceback for debugging purposes
+                return render_template('index.html', error_message=error_message)
 
-        # Description inputs
-        work_descript = row['Work Description'].lower()
-        if work_descript.lower() == 'regular day':
-            work_descript = 'regular day'
-        elif work_descript.lower() == 'legal holiday':
-            work_descript = 'legal holiday'
-        elif work_descript.lower() == 'sunday' or work_descript.lower() == 'saturday':
-            work_descript = 'regular day'
-        else:
-            work_descript = 'special holiday'
+            # Description inputs
+            work_descript = row['Work Description'].lower()
+            if work_descript.lower() == 'regular day':
+                work_descript = 'regular day'
+            elif work_descript.lower() == 'legal holiday':
+                work_descript = 'legal holiday'
+            elif work_descript.lower() == 'sunday' or work_descript.lower() == 'saturday':
+                work_descript = 'regular day'
+            else:
+                error_message = f"Invalid value {work_descript} in the Work Description column. Allowed values are regular day, legal holiday, and special holiday."
+                return render_template('index.html', error_message=error_message)
 
-        # Work Hours Inputs
+            # Work Hours Inputs
+            time_in1 = datetime.strptime(str(row['Time In']), "%H:%M:%S").time()
+            time_in = time_in1.strftime("%H:%M")
+            time_out1 = datetime.strptime(str(row['Time Out']), "%H:%M:%S").time()
+            time_out = time_out1.strftime("%H:%M")
 
-        time_in1 = datetime.strptime(str(row['Time In']), "%H:%M:%S").time()
-        time_in = time_in1.strftime("%H:%M")
-        time_out1 = datetime.strptime(str(row['Time Out']), "%H:%M:%S").time()
-        time_out = time_out1.strftime("%H:%M")
+            # Actual Time in and out
+            actual_time_in1 = datetime.strptime(str(row['Actual Time In']), "%H:%M:%S").time()
+            actual_time_out1 = datetime.strptime(str(row['Actual Time Out']), "%H:%M:%S").time()
+            actual_time_in = actual_time_in1.strftime("%H:%M")
+            actual_time_out = actual_time_out1.strftime("%H:%M")
 
-        # Actual Time in and out
-        actual_time_in1 = datetime.strptime(str(row['Actual Time In']), "%H:%M:%S").time()
-        actual_time_out1 = datetime.strptime(str(row['Actual Time Out']), "%H:%M:%S").time()
-        actual_time_in = actual_time_in1.strftime("%H:%M")
-        actual_time_out = actual_time_out1.strftime("%H:%M")
-
-        calculate_timeanddate(employee_name, employee_code, day_of_week, date_transact1, date_obj, work_descript,
+            calculate_timeanddate(employee_name, employee_code, day_of_week, date_transact1, date_obj, work_descript,
                                   time_in, time_out, time_in1, time_out1, actual_time_in, actual_time_out,
                                   actual_time_in1, actual_time_out1)
 
+        # Read the DataFrame
+        df = pd.read_csv('dtr.csv')
+        delete_duplicate(df)
 
-    # Read the DataFrame
-    df = pd.read_csv('dtr.csv')
-    delete_duplicate(df)
+        return render_template('index.html', dtr=dtr)
 
-    return render_template('index.html', dtr=dtr)
+    except Exception as e:
+        # Handle the exception and pass the error message to the template
+        error_message = "Error in the uploaded file. Please make sure the file format is correct and no missing values."
+        traceback.print_exc()  # Print the traceback for debugging purposes
+        return render_template('index.html', error_message=error_message)
+
 
 @app.route('/submit', methods=['POST'])
 def submit():
@@ -930,50 +943,10 @@ def download():
     try:
         df = pd.read_csv('dtr.csv')
     except FileNotFoundError:
-        df = pd.DataFrame(columns=['Status',
-                                    'Overtime',
-                                    'Employee Code',
-                                    'Employee Name',
-                                    'Date',
-                                    'Day',
-                                    'Weekday or Weekend',
-                                    'Work Description',
-                                    'Time In',
-                                    'Time Out',
-                                    'Actual Time In',
-                                    'Actual Time Out',
-                                    'Net Hours Rendered (Time Format)',
-                                    'Actual Gross Hours Render',
-                                    'Hours Rendered',
-                                    'Undertime Hours',
-                                    'Tardiness',
-                                    'Excess of 8 hours Overtime',
-                                    'Total of 8 hours Overtime',
-                                    'RestDay Overtime for the 1st 8hrs',
-                                    'Rest Day Overtime in Excess of 8hrs',
-                                    'Special Holiday',
-                                    'Special Holiday_1st 8hours',
-                                    'Special Holiday_Excess of 8hrs',
-                                    'Special Holiday Falling on restday 1st 8hrs',
-                                    'Special Holiday on restday Excess 8Hrs',
-                                    'Legal Holiday',
-                                    'Legal Holiday_1st 8hours',
-                                    'Legal Holiday_Excess of 8hrs',
-                                    'Legal Holiday Falling on Rest Day_1st 8hrs',
-                                    'Legal Holiday Falling on Rest Day_Excess of 8hrs',
-                                    'Night Differential Regular Days_1st 8hrs',
-                                    'Night Differential Regular Days_Excess of 8hrs',
-                                    'Night Differential Falling on Rest Day_1st 8hrs',
-                                    'Night Differential Falling on Rest Day_Excess of 8hrs',
-                                    'Night Differential falling on Special Holiday',
-                                    'Night Differential SH_EX8',
-                                    'Night Differential Falling on SPHOL rest day 1st 8 hr',
-                                    'Night Differential SH falling on RD_EX8',
-                                    'Night Differential on Legal Holidays_1st 8hrs',
-                                    'Night Differential on Legal Holidays_Excess of 8hrs',
-                                    'Night Differential on Legal Holidays falling on Rest Days'
-                                    ])
-
+        # Handle the exception and pass the error message to the template
+        error_message = "No Data to download"
+        traceback.print_exc()  # Print the traceback for debugging purposes
+        return render_template('index.html', error_message=error_message)
 
     file_name = 'DTR_Summary.csv'
     if os.path.exists(file_name):
