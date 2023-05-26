@@ -1,15 +1,13 @@
 import json
 import os
 import webbrowser
-from flask import Flask, render_template, request, redirect, send_file, jsonify, url_for, flash
+from flask import Flask, render_template, request, redirect, send_file, jsonify, url_for
 import pandas as pd
 from datetime import datetime, timedelta, time
 import threading
-import webview
 import platform
 import sys
 from openpyxl.reader.excel import load_workbook
-import xlrd
 import traceback
 
 base_dir = '.'
@@ -20,13 +18,14 @@ port = int(os.environ.get('PORT', 9000))
 
 app = Flask(__name__, template_folder=os.path.join(base_dir, 'template'))
 app.secret_key = 'topserve_dtr_generator'
+
 def open_browser(url):
     # Open the web page in the default browser
     webbrowser.open(url)
 
 
 def delete_duplicate(df):
-    df.drop_duplicates(subset=['Employee Code', 'Date'], inplace=True)
+    df.drop_duplicates(subset=['Employee Code', 'Date', 'Cost Center'], inplace=True)
     df.to_csv('dtr.csv', index=False)
     return df
 
@@ -39,6 +38,7 @@ def index():
                                     'Overtime',
                                     'Employee Code',
                                     'Employee Name',
+                                    'Cost Center',
                                     'Date',
                                     'Day',
                                     'Weekday or Weekend',
@@ -112,7 +112,7 @@ def hour_estimate(estimate):
 
     return estimate
 
-def calculate_timeanddate(employee_name, employee_code, day_of_week, date_transact1, date_obj, work_descript, time_in, time_out, time_in1, time_out1, actual_time_in, actual_time_out, actual_time_in1, actual_time_out1):
+def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week, date_transact1, date_obj, work_descript, time_in, time_out, time_in1, time_out1, actual_time_in, actual_time_out, actual_time_in1, actual_time_out1):
     week_day = date_obj.weekday()
     if week_day < 5:  # Weekday (Monday to Friday)
         week_check = "Weekday"
@@ -509,6 +509,7 @@ def calculate_timeanddate(employee_name, employee_code, day_of_week, date_transa
                             'Overtime': [overtime],
                             'Employee Code': [employee_code],
                             'Employee Name': [employee_name],
+                            'Cost Center': [cost_center],
                             'Date': [date_transact1],
                             'Day': [day_of_week],
                             'Weekday or Weekend': [week_check],
@@ -556,6 +557,7 @@ def calculate_timeanddate(employee_name, employee_code, day_of_week, date_transa
                                     'Overtime',
                                     'Employee Code',
                                     'Employee Name',
+                                    'Cost Center',
                                     'Date',
                                     'Day',
                                     'Weekday or Weekend',
@@ -612,6 +614,7 @@ def upload():
                                     'Overtime',
                                     'Employee Code',
                                     'Employee Name',
+                                    'Cost Center',
                                     'Date',
                                     'Day',
                                     'Weekday or Weekend',
@@ -655,6 +658,7 @@ def upload():
             # Employee inputs
             employee_name = row['Employee Name'].upper()
             employee_code = row['Employee Code'].upper()
+            cost_center = row['Cost Center']
 
             # Date of transaction
             date_obj = ""
@@ -698,7 +702,7 @@ def upload():
             actual_time_in = actual_time_in1.strftime("%H:%M")
             actual_time_out = actual_time_out1.strftime("%H:%M")
 
-            calculate_timeanddate(employee_name, employee_code, day_of_week, date_transact1, date_obj, work_descript,
+            calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week, date_transact1, date_obj, work_descript,
                                   time_in, time_out, time_in1, time_out1, actual_time_in, actual_time_out,
                                   actual_time_in1, actual_time_out1)
 
@@ -723,6 +727,7 @@ def submit():
                                     'Overtime',
                                     'Employee Code',
                                     'Employee Name',
+                                    'Cost Center',
                                     'Date',
                                     'Day',
                                     'Weekday or Weekend',
@@ -764,6 +769,7 @@ def submit():
     #Employee inputs
     employee_name = request.form.get('employee_name').upper()
     employee_code = request.form.get('employee_code').upper()
+    cost_center = request.form.get('cost_center')
 
 
     #Date of transaction
@@ -806,7 +812,7 @@ def submit():
     actual_time_out1 = datetime.strptime(request.form.get('actual_time_out'), "%H:%M").time()
     actual_time_out = actual_time_out1.strftime("%H:%M")
 
-    calculate_timeanddate(employee_name, employee_code, day_of_week, date_transact1, date_obj, work_descript, time_in, time_out, time_in1, time_out1, actual_time_in, actual_time_out, actual_time_in1, actual_time_out1)
+    calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week, date_transact1, date_obj, work_descript, time_in, time_out, time_in1, time_out1, actual_time_in, actual_time_out, actual_time_in1, actual_time_out1)
 
     # Read the DataFrame
     df = pd.read_csv('dtr.csv')
@@ -952,93 +958,51 @@ def download():
     if os.path.exists(file_name):
         os.remove(file_name)
 
-
+    grouped_df = df.groupby(['Employee Name', 'Cost Center'])
 
     # Step 4: Compute overtime for each employee
-    for code in df['Employee Name'].unique():
-        employee_df = df[df['Employee Name'] == code]
-        name = employee_df['Employee Name'].iloc[0]
+    for (name, cost_center), employee_df in grouped_df:
         employee_code = employee_df['Employee Code'].iloc[0]
         status = employee_df['Status']
-
-
 
         # Check if the status is not approved and set overtime to 0
         # if 'Not Approved' in status.values:
         #     employee_df.loc[status == 'Not Approved', 'Overtime'] = 0
 
-        total_working_days = 0
-        working_hours1 = 0
-        tardiness1 = 0
-        RegularDay_RestDay = 0
-        RegularDay_Overtime = 0
-        RegularDay_Overtime_Excess = 0
-        RegularDay_RestDay_Overtime = 0
-        RegularDay_RestDay_Overtime_Excess = 0
 
-        RegularDay_RestDay_Night_8hours = 0
-        RegularDay_RestDay_Night_8hours_Excess = 0
-        RegularDay_Night_8hours = 0
-        RegularDay_Night_8hours_Excess = 0
-
-        Specialholiday = 0
-        Specialholiday_Overtime = 0
-        Specialholiday_Overtime_Excess = 0
-        Specialholiday_RestDay_Overtime = 0
-        Specialholiday_Restday_Overtime_Excess = 0
-        legalholiday = 0
-        legalholiday_Overtime = 0
-        legalholiday_Overtime_Excess = 0
-        legalholiday_RestDay_Overtime = 0
-        legalholiday_RestDay_Overtime_Excess = 0
-        Specialholiday_RestDay_Night_8hours = 0
-        Specialholiday_RestDay_Night_8hours_Excess = 0
-        legalholiday_Night_diffence = 0
-        legalholiday_Night_8hours = 0
-        legalholiday_Night_8hours_Excess = 0
-        Specialholiday_Night_diffence = 0
-        Specialholiday_Night_8hours_Excess = 0
-
-        for index, row in employee_df.iterrows():
-            work_desc = row['Work Description']
-            overtime = row['Overtime']
-            rest_day = row['Weekday or Weekend']
-            time_in = row['Actual Time In']
-            working_hours = row['Actual Gross Hours Render']
-            tardiness = row['Tardiness']
-
-            total_working_days = len(employee_df.loc[(employee_df['Work Description'] == 'regular day') & (employee_df['Weekday or Weekend'] == 'Weekday'), 'Employee Code'])
-            working_hours1 = employee_df.loc[(employee_df['Work Description'] == 'regular day') & (employee_df['Weekday or Weekend'] == 'Weekday'), 'Actual Gross Hours Render'].sum()
-            tardiness1 = employee_df.loc[(employee_df['Work Description'] == 'regular day') & (employee_df['Weekday or Weekend'] == 'Weekday'), 'Tardiness'].sum()
-            RegularDay_Overtime = employee_df['Total of 8 hours Overtime'].sum()
-            RegularDay_Overtime_Excess = employee_df['Excess of 8 hours Overtime'].sum()
-            RegularDay_RestDay = employee_df['RestDay Overtime for the 1st 8hrs'].sum()
-            RegularDay_RestDay_Overtime = employee_df['Rest Day Overtime in Excess of 8hrs'].sum()
-            RegularDay_RestDay_Overtime_Excess = employee_df['Rest Day Overtime in Excess of 8hrs'].sum()
-            Specialholiday = employee_df['Special Holiday'].sum()
-            Specialholiday_Overtime = employee_df['Special Holiday_1st 8hours'].sum()
-            Specialholiday_Overtime_Excess = employee_df['Special Holiday_Excess of 8hrs'].sum()
-            Specialholiday_RestDay_Overtime = employee_df['Special Holiday Falling on restday 1st 8hrs'].sum()
-            Specialholiday_Restday_Overtime_Excess = employee_df['Special Holiday on restday Excess 8Hrs'].sum()
-            legalholiday = employee_df['Legal Holiday'].sum()
-            legalholiday_Overtime = employee_df['Legal Holiday_1st 8hours'].sum()
-            legalholiday_Overtime_Excess = employee_df['Legal Holiday_Excess of 8hrs'].sum()
-            legalholiday_RestDay_Overtime = employee_df['Legal Holiday Falling on Rest Day_1st 8hrs'].sum()
-            legalholiday_RestDay_Overtime_Excess = employee_df['Legal Holiday Falling on Rest Day_Excess of 8hrs'].sum()
-            RegularDay_Night_8hours = employee_df['Night Differential Regular Days_1st 8hrs'].sum()
-            RegularDay_Night_8hours_Excess = employee_df['Night Differential Falling on Rest Day_1st 8hrs'].sum()
-            RegularDay_RestDay_Night_8hours = employee_df['Night Differential Falling on Rest Day_Excess of 8hrs'].sum()
-            RegularDay_RestDay_Night_8hours_Excess = employee_df['Night Differential falling on Special Holiday'].sum()
-            Specialholiday_RestDay_Night_8hours = employee_df['Night Differential Falling on SPHOL rest day 1st 8 hr'].sum()
-            Specialholiday_RestDay_Night_8hours_Excess = employee_df['Night Differential SH falling on RD_EX8'].sum()
-            legalholiday_Night_diffence = employee_df['Night Differential on Legal Holidays falling on Rest Days'].sum()
-            legalholiday_Night_8hours = employee_df['Night Differential on Legal Holidays_1st 8hrs'].sum()
-            legalholiday_Night_8hours_Excess = employee_df['Night Differential on Legal Holidays_Excess of 8hrs'].sum()
-            Specialholiday_Night_diffence = employee_df['Night Differential Falling on SPHOL rest day 1st 8 hr'].sum()
-            Specialholiday_Night_8hours_Excess = employee_df['Night Differential SH_EX8'].sum()
+        total_working_days = len(employee_df.loc[(employee_df['Work Description'] == 'regular day') & (employee_df['Weekday or Weekend'] == 'Weekday'), 'Employee Code'])
+        working_hours1 = employee_df.loc[(employee_df['Work Description'] == 'regular day') & (employee_df['Weekday or Weekend'] == 'Weekday'), 'Actual Gross Hours Render'].sum()
+        tardiness1 = employee_df.loc[(employee_df['Work Description'] == 'regular day') & (employee_df['Weekday or Weekend'] == 'Weekday'), 'Tardiness'].sum()
+        RegularDay_Overtime = employee_df['Total of 8 hours Overtime'].sum()
+        RegularDay_Overtime_Excess = employee_df['Excess of 8 hours Overtime'].sum()
+        RegularDay_RestDay = employee_df['RestDay Overtime for the 1st 8hrs'].sum()
+        RegularDay_RestDay_Overtime = employee_df['Rest Day Overtime in Excess of 8hrs'].sum()
+        RegularDay_RestDay_Overtime_Excess = employee_df['Rest Day Overtime in Excess of 8hrs'].sum()
+        Specialholiday = employee_df['Special Holiday'].sum()
+        Specialholiday_Overtime = employee_df['Special Holiday_1st 8hours'].sum()
+        Specialholiday_Overtime_Excess = employee_df['Special Holiday_Excess of 8hrs'].sum()
+        Specialholiday_RestDay_Overtime = employee_df['Special Holiday Falling on restday 1st 8hrs'].sum()
+        Specialholiday_Restday_Overtime_Excess = employee_df['Special Holiday on restday Excess 8Hrs'].sum()
+        legalholiday = employee_df['Legal Holiday'].sum()
+        legalholiday_Overtime = employee_df['Legal Holiday_1st 8hours'].sum()
+        legalholiday_Overtime_Excess = employee_df['Legal Holiday_Excess of 8hrs'].sum()
+        legalholiday_RestDay_Overtime = employee_df['Legal Holiday Falling on Rest Day_1st 8hrs'].sum()
+        legalholiday_RestDay_Overtime_Excess = employee_df['Legal Holiday Falling on Rest Day_Excess of 8hrs'].sum()
+        RegularDay_Night_8hours = employee_df['Night Differential Regular Days_1st 8hrs'].sum()
+        RegularDay_Night_8hours_Excess = employee_df['Night Differential Falling on Rest Day_1st 8hrs'].sum()
+        RegularDay_RestDay_Night_8hours = employee_df['Night Differential Falling on Rest Day_Excess of 8hrs'].sum()
+        RegularDay_RestDay_Night_8hours_Excess = employee_df['Night Differential falling on Special Holiday'].sum()
+        Specialholiday_RestDay_Night_8hours = employee_df['Night Differential Falling on SPHOL rest day 1st 8 hr'].sum()
+        Specialholiday_RestDay_Night_8hours_Excess = employee_df['Night Differential SH falling on RD_EX8'].sum()
+        legalholiday_Night_diffence = employee_df['Night Differential on Legal Holidays falling on Rest Days'].sum()
+        legalholiday_Night_8hours = employee_df['Night Differential on Legal Holidays_1st 8hrs'].sum()
+        legalholiday_Night_8hours_Excess = employee_df['Night Differential on Legal Holidays_Excess of 8hrs'].sum()
+        Specialholiday_Night_diffence = employee_df['Night Differential Falling on SPHOL rest day 1st 8 hr'].sum()
+        Specialholiday_Night_8hours_Excess = employee_df['Night Differential SH_EX8'].sum()
 
         new_df = pd.DataFrame({'Employee_Code': [employee_code],
                                'Employee_Name': [name],
+                               'Cost Center': [cost_center],
                                'No. of Working Days': [total_working_days],
                                'Number of Working Hours': [working_hours1],
                                'Tardiness/Undertime': [tardiness1],
@@ -1060,8 +1024,8 @@ def download():
                                 'Night Differential Regular Days_1st 8hrs':[RegularDay_Night_8hours],
                                 'Night Differential Regular Days_Excess of 8hrs':[RegularDay_Night_8hours_Excess],
                                 'Night Differential Falling on Rest Day_1st 8hrs':[RegularDay_RestDay_Night_8hours],
-                                'Night Differential Falling on Rest Day_Excess of 8hrs':[RegularDay_RestDay_Night_8hours_Excess],
-                                'Night Differential Falling on SPHOL rest day 1st 8 hr':[Specialholiday_RestDay_Night_8hours],
+                                'Night Differential Falling on Rest Day_Excess of 8hrs': [RegularDay_RestDay_Night_8hours_Excess],
+                                'Night Differential Falling on SPHOL rest day 1st 8 hr': [Specialholiday_RestDay_Night_8hours],
                                 'Night Differential SH falling on RD_EX8':[Specialholiday_RestDay_Night_8hours_Excess],
                                 'Night Differential on Legal Holidays falling on Rest Days':[legalholiday_Night_diffence],
                                 'Night Differential on Legal Holidays_1st 8hrs':[legalholiday_Night_8hours],
@@ -1074,6 +1038,7 @@ def download():
         except FileNotFoundError:
             existing_df = pd.DataFrame(columns=['Employee_Code',
                                                 'Employee_Name',
+                                                'Cost Center',
                                                 'No. of Working Days',
                                                 'Number of Working Hours',
                                                 'Tardiness/Undertime',
@@ -1115,6 +1080,7 @@ def download():
     except FileNotFoundError:
         dfexcel = pd.DataFrame(columns=['Employee_Code',
                                             'Employee_Name',
+                                            'Cost Center',
                                             'No. of Working Days',
                                             'Number of Working Hours',
                                             'Tardiness/Undertime',
@@ -1157,6 +1123,7 @@ def download():
     cell_mapping = {
         'Employee_Code': 'A6',
         'Employee_Name': 'B6',
+        'Cost Center': 'G6',
         'No. of Working Days': 'J6',
         'Number of Working Hours': 'K6',
         'Tardiness/Undertime': 'L6',
@@ -1224,4 +1191,5 @@ if __name__ == '__main__':
     browser_thread = threading.Thread(target=open_browser, args=(url,))
     browser_thread.start()
 
-    app.run(use_reloader=False, port=port)
+
+    app.run(debug=True, use_reloader=False, port=port)

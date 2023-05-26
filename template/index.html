@@ -1,89 +1,88 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Timekeeping System</title>
+    <title>Topserve Timekeeping System</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.14.0/css/bootstrap-select.min.css">
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
-
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='Photos/HD_TOPSERVE.png') }}" />
+    
     <style>
-        body {
-                background-image: url("{{ url_for('static', filename='Photos/NInaMarie_Background2.jpg') }}");
-                background-repeat: no-repeat;
-                background-size: cover;
+            body {
+                    background-image: url("{{ url_for('static', filename='Photos/NInaMarie_Background2.jpg') }}");
+                    background-repeat: no-repeat;
+                    background-size: cover;
+                }
+
+          table.data {
+            border-collapse: collapse;
+            border-spacing: 0;
+            width: 100%;
+            border: 1px solid #ddd;
+          }
+
+          table.data th, table.data td {
+            text-align: left;
+            padding: 8px;
+          }
+
+          table.data tr:nth-child(even){background-color: #f2f2f2}
+
+         
+            .sticky-header {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                z-index: 999;
+                background-color: #fff; /* adjust to your header color */
+                box-shadow: 0 2px 5px rgba(0,0,0,.2); /* optional: add a shadow to the header */
+            }
+            .sticky-header {
+            position: sticky;
+            top: 0;
+            z-index: 999;
+            background-color: #fff; /* replace with your desired background color */
+            }
+            /* Add sticky header to table */
+            #table thead th {
+                position: sticky;
+                top: 0;
+                z-index: 1;
+                background-color: #fff;
             }
 
-      table.data {
-        border-collapse: collapse;
-        border-spacing: 0;
-        width: 100%;
-        border: 1px solid #ddd;
-      }
-
-      table.data th, table.data td {
-        text-align: left;
-        padding: 8px;
-      }
-
-      table.data tr:nth-child(even){background-color: #f2f2f2}
-
-     
-        .sticky-header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            z-index: 999;
-            background-color: #fff; /* adjust to your header color */
-            box-shadow: 0 2px 5px rgba(0,0,0,.2); /* optional: add a shadow to the header */
-        }
-        .sticky-header {
-        position: sticky;
-        top: 0;
-        z-index: 999;
-        background-color: #fff; /* replace with your desired background color */
-        }
-        /* Add sticky header to table */
-        #table thead th {
-            position: sticky;
-            top: 0;
-            z-index: 1;
-            background-color: #fff;
-        }
-
-        .highlight {
-        background-color: yellow;
-        }
+            .highlight {
+            background-color: yellow;
+            }
 
 
-        .h3-bgcolor{
-            color: #e60000;
-            padding-right: 0;
-            margin-right: 0;
-        }
+            .h3-bgcolor{
+                color: #e60000;
+                padding-right: 0;
+                margin-right: 0;
+            }
 
-        .header{
-            position: sticky;
-            top: 0;
-            z-index: 999;
-            border-block: 10px solid red;
-            padding: 10px;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-        }
-        .logo {
-            max-width: 100px;
-            height: auto;
-        }
-        .title {
-            font-size: 24px; /* Adjust the font size as needed */
-        }
-        .logo-container {
-            margin-right: 10px; /* Adjust the margin as needed */
-        }
-
-        
+            .header{
+                position: sticky;
+                top: 0;
+                z-index: 999;
+                border-block: 10px solid red;
+                padding: 10px;
+                margin-bottom: 10px;
+                display: flex;
+                align-items: center;
+            }
+            .logo {
+                max-width: 100px;
+                height: auto;
+            }
+            .title {
+                font-size: 24px; /* Adjust the font size as needed */
+            }
+            .logo-container {
+                margin-right: 10px; /* Adjust the margin as needed */
+            }
 
     </style>
 
@@ -93,7 +92,7 @@
         <div class="logo-container">
             <img src="{{ url_for('static', filename='Photos/HD_TOPSERVE.png') }}" alt="Logo" class="logo">
         </div>
-        <h1 class="title">East West Timekeeping</h1>
+        <h1 class="title">EastWest Timekeeping</h1>
     </header>
     <div style="float: left; margin-left: 20px">
         <h3>Input Employee Data</h3>
@@ -107,6 +106,10 @@
             <!--employee name-->
             <label for="employee_name">Employee Name:</label>
             <input type="text" name="employee_name" id="employee_name" value="{{ request.form.get('employee_name', '') }}" required><br><br>
+
+            <!--cost center-->
+            <label for="cost_center">Cost Center:</label>
+            <input type="text" name="cost_center" id="cost_center" value="{{ request.form.get('cost_center', '') }}" required><br><br>
 
             <!--Date of transaction-->
             <label for="start_date">Date of Transaction:</label>
@@ -288,6 +291,7 @@
         window.onload = function() {
       var employeeCodeInput = document.getElementById('employee_code');
       var employeeNameInput = document.getElementById('employee_name');
+      var costCenter = document.getElementById('cost_center');
 
       if (getCookie('employeeCode')) {
         employeeCodeInput.value = getCookie('employeeCode');
@@ -295,6 +299,9 @@
 
       if (getCookie('employeeName')) {
         employeeNameInput.value = getCookie('employeeName');
+      }
+      if (getCookie('costCenter')) {
+        employeeNameInput.value = getCookie('cost_center');
       }
     }
 
@@ -325,6 +332,7 @@
     form.addEventListener('submit', function(event) {
       var employeeCodeInput = document.getElementById('employee_code');
       var employeeNameInput = document.getElementById('employee_name');
+      var costCenter = document.getElementById('cost_center');
 
       if (employeeCodeInput.value != '') {
         setCookie('employeeCode', employeeCodeInput.value);
@@ -332,6 +340,9 @@
 
       if (employeeNameInput.value != '') {
         setCookie('employeeName', employeeNameInput.value);
+      }
+      if (costCenter.value != '') {
+        setCookie('costCenter', costCenter.value);
       }
     });
 </script>
