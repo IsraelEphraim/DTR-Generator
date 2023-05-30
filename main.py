@@ -9,9 +9,6 @@ import platform
 import sys
 from openpyxl.reader.excel import load_workbook
 import traceback
-import eventlet
-import eventlet.wsgi
-from flask_socketio import SocketIO
 
 
 base_dir = '.'
@@ -22,17 +19,6 @@ port = int(os.environ.get('PORT', 9000))
 
 app = Flask(__name__, template_folder=os.path.join(base_dir, 'template'))
 app.secret_key = 'topserve_dtr_generator'
-socketio = SocketIO(app)
-
-@socketio.on('connect')
-def handle_connect():
-    session['connected'] = True
-
-@socketio.on('disconnect')
-def handle_disconnect():
-    session['connected'] = False
-
-
 
 
 def open_browser(url):
