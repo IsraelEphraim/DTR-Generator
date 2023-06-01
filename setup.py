@@ -4,8 +4,7 @@ from cx_Freeze import setup, Executable
 build_exe_options = {
     "packages": ["webbrowser", "pandas", "openpyxl"],  # Add any required packages
     "excludes": [],
-    "include_files": ["template/index.html", "template/table.html", "static/Photos/HD_TOPSERVE.png",
-                      "static/Photos/NInaMarie_Background2.jpg", "excel_temp.xlsx", "excel_temp.xlsx"]  # Add any additional files or directories
+    "include_files": ["template", "static"]  # Add any additional files or directories
 }
 
 setup(
