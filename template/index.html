@@ -10,9 +10,10 @@
     
     <style>
             body {
-                    background-image: url("{{ url_for('static', filename='Photos/NInaMarie_Background2.jpg') }}");
+                    background-image: url("{{ url_for('static', filename='Photos/background.jpg') }}");
                     background-repeat: no-repeat;
                     background-size: cover;
+                    background-position: center;
                 }
 
           table.data {
@@ -45,6 +46,7 @@
             z-index: 999;
             background-color: #fff; /* replace with your desired background color */
             }
+
             /* Add sticky header to table */
             #table thead th {
                 position: sticky;
@@ -64,179 +66,183 @@
                 margin-right: 0;
             }
 
-            .header{
-                position: sticky;
-                top: 0;
-                z-index: 999;
-                border-block: 10px solid red;
-                padding: 10px;
-                margin-bottom: 10px;
-                display: flex;
-                align-items: center;
+            .header {
+              position: sticky;
+              top: 0;
+              z-index: 999;
+              border-block: 10px solid red;
+              padding: 10px;
+              margin-bottom: 10px;
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
             }
+
             .logo {
-                max-width: 100px;
-                height: auto;
+              max-width: 170px;
+              height: auto;
             }
+
             .title {
-                font-size: 24px; /* Adjust the font size as needed */
+              font-size: 35px;
+              font-weight: bold;
             }
+
             .logo-container {
-                margin-right: 10px; /* Adjust the margin as needed */
+              margin-left: 20px;
             }
+
+
+            .input_box {
+                margin-right: 10px;
+            }
+            label {
+                font-size: 20px;
+                font-weight: bold;
+            }
+
+            input[type="submit"] {
+                font-size: 18px;
+                padding: 10px 20px;
+                font-weight: bold;
+              }
+
+
 
     </style>
 
 </head>
 <body>
     <header class="header">
-        <div class="logo-container">
-            <img src="{{ url_for('static', filename='Photos/HD_TOPSERVE.png') }}" alt="Logo" class="logo">
-        </div>
-        <h1 class="title">EastWest Timekeeping</h1>
+      <h1 class="title">TOPSERVE TIMEKEEPING</h1>
+      <div class="logo-container">
+        <img src="{{ url_for('static', filename='Photos/HD_TOPSERVE.png') }}" alt="Logo" class="logo">
+      </div>
+      
     </header>
-    <div style="float: left; margin-left: 20px">
-        <h3>Input Employee Data</h3>
-        <br>
-        <form method="post" action="/submit" onsubmit="return validateForm()">
 
-            <!--employee code-->
-            <label for="employee_code">Employee Code:</label>
-            <input type="text" name="employee_code" id="employee_code" value="{{ request.form.get('employee_code', '') }}" oninput="lookup_employee()"><br><br>
+<div style="float: left; margin-left: 20px;">
+  <h2>Input Employee Data</h2>
+  <br>
+  <form method="post" action="/submit" onsubmit="return validateForm()">
+    <!-- employee code -->
+    <label for="employee_code">Employee Code:</label>
+    <input type="text" name="employee_code" id="employee_code" value="{{ request.form.get('employee_code', '') }}" oninput="lookup_employee()" class="input_box">
+    <!-- employee name -->
+    <label for="employee_name">Employee Name:</label>
+    <input type="text" name="employee_name" id="employee_name" value="{{ request.form.get('employee_name', '') }}" class="input_box" required>
+    <!-- cost center -->
+    <label for="cost_center">Cost Center:</label>
+    <input type="text" name="cost_center" id="cost_center" value="{{ request.form.get('cost_center', '') }}" class="input_box" required>
+    <!-- Date of transaction -->
+    <label for="start_date">Date of Transaction:</label>
+    <input type="date" name="start_date" id="start_date" value="{{ modified_date_str }}" class="input_box" required>
+    <br><br>
+    <!-- Working Day -->
+    <label for="work_descript">Working Day:</label>
+    <select name="work_descript" id="work_descript" class="input_box" required>
+      <option value="Regular Day">Regular Day</option>
+      <option value="Special Holiday">Special holiday</option>
+      <option value="Legal Holiday">Legal holiday</option>
+    </select>
+    <!-- Time in -->
+    <label for="time_in">Time In:</label>
+    <input type="time" name="time_in" id="time_in" value="{{ request.form.get('time_in', '') }}" class="input_box" required>
+    <!-- Time out -->
+    <label for="time_out">Time Out:</label>
+    <input type="time" name="time_out" id="time_out" value="{{ request.form.get('time_out', '') }}" class="input_box" required>
+    <!-- Actual Time in -->
+    <label for="actual_time_in">Actual Time In:</label>
+    <input type="time" name="actual_time_in" id="actual_time_in" value="{{ request.form.get('actual_time_in', '') }}" class="input_box" required>
+    <!-- Actual Time out -->
+    <label for="actual_time_out">Actual Time Out:</label>
+    <input type="time" name="actual_time_out" id="actual_time_out" value="{{ request.form.get('actual_time_out', '') }}" class="input_box" required>
+    <input type="submit" value="Submit">
+    <br><br>
+  </form>
+</div>
 
-            <!--employee name-->
-            <label for="employee_name">Employee Name:</label>
-            <input type="text" name="employee_name" id="employee_name" value="{{ request.form.get('employee_name', '') }}" required><br><br>
+<div style="clear: both;"></div>
+<br><br>
+<div style="clear: both;"></div>
 
-            <!--cost center-->
-            <label for="cost_center">Cost Center:</label>
-            <input type="text" name="cost_center" id="cost_center" value="{{ request.form.get('cost_center', '') }}" required><br><br>
+<div style="float: left; margin-left: 20px;">
+  <h2>Upload Excel File</h2>
+  <form method="post" action="/upload" enctype="multipart/form-data" onsubmit="">
+    <input type="file" name="file" id="fileInput" onchange="checkFileSelected()" style="font-weight: bold;">
+    <input type="submit" value="Upload" id="submitButton" style="font-weight: bold;" disabled>
+  </form>
+  <script>
+    function checkFileSelected() {
+      var fileInput = document.getElementById('fileInput');
+      var submitButton = document.getElementById('submitButton');
+      if (fileInput.value !== "") {
+        submitButton.disabled = false;
+      } else {
+        submitButton.disabled = true;
+      }
+    }
+  </script>
+</div>
 
-            <!--Date of transaction-->
-            <label for="start_date">Date of Transaction:</label>
-            <input type="date" name="start_date" id="start_date" value="{{ modified_date_str }}"  required><br><br>
-
-            <!--Working Day-->
-            <label for="work_descript">Working Day:</label>
-            <select name="work_descript" id="work_descript" required>
-                <option value="Regular Day">Regular Day</option>
-                <option value="Special Holiday">Special holiday</option>
-                <option value="Legal Holiday">Legal holiday</option>
-            </select>
-
-            <br><br>
-
-            <!--Time in-->
-            <label for="time_in"> Time In:</label>
-            <input type="time" name="time_in" id="time_in" value="{{ request.form.get('time_in', '') }}" required><br><br>
-            <!--Time out-->
-            <label for="time_out"> Time Out:</label>
-            <input type="time" name="time_out" id="time_out" value="{{ request.form.get('time_out', '') }}" required><br><br>
-            <!--Actual Time in-->
-            <label for="actual_time_in">Actual Time In:</label>
-            <input type="time" name="actual_time_in" id="actual_time_in" value="{{ request.form.get('actual_time_in', '') }}" required><br><br>
-            <!--Actual Time out-->
-            <label for="actual_time_out">Actual Time Out:</label>
-            <input type="time" name="actual_time_out" id="actual_time_out" value="{{ request.form.get('actual_time_out', '') }}" required><br><br>
-
-
-            <input type="submit" value="Submit">
-            <br><br>
-        </form>
-    </div>
-
-    <div style="float: right; padding-right: 50px;">
-        <div>
-        <h3 class="h3-bgcolor">Delete Data</h3>
-        <form method="post" action="/delete">
-            <label for="delete_employee_code">Delete Row</label>
-            <input type="text" name="delete_employee_code" id="delete_employee_code" placeholder="Employee Code">
-            <input type="date" name="delete_date" id="delete_date" placeholder="Date">
-            <button type="submit">Delete Row</button><br>
-            <p style="margin-left: 125.5px">Case Sensitive</p>
-        </form>
-        </div>
-
-        <br>
-        <div>
-            <h3 class="h3-bgcolor">Delete Table</h3>
-            <form method="post" action="/delete_data" onsubmit="return confirmDelete();">
-                <p>All employee data will be deleted</p>
-                <button type="submit" name="/delete_data">Delete Data</button>
-            </form>
-
-            <script>
-                function confirmDelete() {
-                    return confirm("Are you sure you want to delete all employee data?");
-                }
-            </script>
-        </div>
-        
-    </div>
+<div style="float: left; margin-left: 100px;">
+  <h2>Download Summary</h2>
+  <p>Click the button to download the CSV file:</p>
+  <a href="/download"><button id="downloadButton" style="font-weight: bold;">Download Excel</button></a>
+</div>
 
 
-    <div style="float: center; Padding-left: 500px">
-        <div>
-        <h3>Upload Excel File</h3>
-	    <form method="post" action="/upload" enctype="multipart/form-data" onsubmit="">
-		    <input type="file" name="file" id="fileInput" onchange="checkFileSelected()">
-		    <input type="submit" value="Upload" id="submitButton" disabled>
-	    </form>
-
-        <script>
-            function checkFileSelected() {
-                var fileInput = document.getElementById('fileInput');
-                var submitButton = document.getElementById('submitButton');
-
-                if (fileInput.value !== "") {
-                    submitButton.disabled = false;
-                } else {
-                    submitButton.disabled = true;
-                }
-            }
-
-        </script>
-
-        </div>
-
-        <br><br>
-
-        <div>
-        <h3>Download Summary</h3>
-        <p>Click the button to download the CSV file:</p>
-        <a href="/download"><button id="downloadButton">Download Excel</button></a>
 
 
-        <br><br><br><br>
+<div style="float: left; margin-left: 100px;">
+    <h2 class="h3-bgcolor">Delete Data</h2>
+    <form method="post" action="/delete">
+      <label for="delete_employee_code">Delete Row</label>
+      <input type="text" name="delete_employee_code" id="delete_employee_code" placeholder="Employee Code">
+      <input type="date" name="delete_date" id="delete_date" placeholder="Date">
+      <button type="submit" style="font-weight: bold;">Delete Row</button><br>
+      <p style="margin-left: 125.5px">Case Sensitive</p>
+    </form>
+</div>
+  
+<div style="float: left; margin-left: 20px;">
+    <h2 class="h3-bgcolor">Delete Table</h2>
+    <form method="post" action="/delete_data" onsubmit="return confirmDelete();">
+      <p>All employee data will be deleted</p>
+      <button type="submit" name="/delete_data" style="font-weight: bold;">Delete Data</button>
+    </form>
+    <script>
+      function confirmDelete() {
+        return confirm("Are you sure you want to delete all employee data?");
+      }
+    </script>
+</div>
 
-        </div>
+<div style="float: left; margin: 50px; margin-left: 100px;">
+    <a href="{{ url_for('table') }}" class="btn btn-primary" style="font-weight: bold;">Go to table</a>
+</div>
 
-        <a href="{{ url_for('table') }}" class="btn btn-primary">Go to table</a>
 
 
-    </div>
-
-    
-
-    <!-- Modal -->
-    <div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-labelledby="errorModalLabel" aria-hidden="true">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="errorModalLabel">Error</h5>
-            <!-- <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button> -->
-          </div>
-          <div class="modal-body">
-            <p id="errorText"></p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal" id="closeErrorModal">Close</button>
-          </div>
-        </div>
+<div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-labelledby="errorModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="errorModalLabel">Error</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p id="errorText"></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal" id="closeErrorModal">Close</button>
       </div>
     </div>
+  </div>
+</div>
+
 
 
 
