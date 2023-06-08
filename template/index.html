@@ -79,7 +79,7 @@
             }
 
             .logo {
-              max-width: 170px;
+              max-width: 100px;
               height: auto;
             }
 
@@ -185,16 +185,16 @@
   </script>
 </div>
 
-<div style="float: left; margin-left: 100px;">
+<div style="float: left; margin-left: 20px;">
   <h2>Download Summary</h2>
-  <p>Click the button to download the CSV file:</p>
+  <p style="font-weight: bold;">Click the button to download the CSV file:</p>
   <a href="/download"><button id="downloadButton" style="font-weight: bold;">Download Excel</button></a>
 </div>
 
 
 
 
-<div style="float: left; margin-left: 100px;">
+<div style="float: left; margin-left: 20px;">
     <h2 class="h3-bgcolor">Delete Data</h2>
     <form method="post" action="/delete">
       <label for="delete_employee_code">Delete Row</label>
@@ -208,7 +208,7 @@
 <div style="float: left; margin-left: 20px;">
     <h2 class="h3-bgcolor">Delete Table</h2>
     <form method="post" action="/delete_data" onsubmit="return confirmDelete();">
-      <p>All employee data will be deleted</p>
+      <p style="font-weight: bold;">All employee data will be deleted</p>
       <button type="submit" name="/delete_data" style="font-weight: bold;">Delete Data</button>
     </form>
     <script>
