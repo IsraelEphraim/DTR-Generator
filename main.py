@@ -184,7 +184,7 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
 
         if check_halfday > 2:
             time_in1 = str(time_in1)
-            time_in1 = halfday(time_in1, 4)
+            time_in1 = halfday(time_in1, 5)
             time_in1 = datetime.strptime(str(time_in1), "%H:%M:%S").time()
             datetime_timein0 = datetime.combine(date_obj.date(), time_in1)
             workingday = .5
@@ -328,7 +328,7 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
     #=====================================================================
     #NON CHARGEABLE BREAK
 
-    if total_actual_datetime_in_out_int > 4:
+    if total_datetime_in_out_int >= 5:
         non_chargeable_break = time(1, 0, 0)
         non_chargeable_break_timedelta = timedelta(hours=non_chargeable_break.hour, minutes=non_chargeable_break.minute,
                                                    seconds=non_chargeable_break.second)
@@ -496,7 +496,8 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
 
             # This condition is for calculating the overtime
             if actual_datetime_timeout > datetime_timeout:
-                overtime = total_actual_datetime_in_out_int - total_datetime_in_out_int
+                overtime = actual_datetime_timeout - datetime_timeout
+                overtime = timedelta_to_decimal(overtime)
                 if overtime > 8:
                     ot_excess_8 = overtime - 8
                     ot_first_8 = overtime - ot_excess_8
