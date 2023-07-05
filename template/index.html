@@ -4,115 +4,134 @@
     <title>Topserve Timekeeping System</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.14.0/css/bootstrap-select.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/3.1.3/socket.io.js"></script>
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='Photos/HD_TOPSERVE.png') }}" />
     
     <style>
-            body {
-                    background-image: url("{{ url_for('static', filename='Photos/background.jpg') }}");
-                    background-repeat: no-repeat;
-                    background-size: cover;
-                    background-position: center;
-                }
+      body {
+        background-repeat: no-repeat;
+        background-size: cover;
+        background-position: center;
+      }
 
-          table.data {
-            border-collapse: collapse;
-            border-spacing: 0;
-            width: 100%;
-            border: 1px solid #ddd;
-          }
+      .background-image {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        background-image: url("{{ url_for('static', filename='Photos/background.jpg') }}");
+        background-repeat: no-repeat;
+        background-size: cover;
+        background-position: center;
+      }
 
-          table.data th, table.data td {
-            text-align: left;
-            padding: 8px;
-          }
+      table.data {
+        border-collapse: collapse;
+        border-spacing: 0;
+        width: 100%;
+        border: 1px solid #ddd;
+      }
 
-          table.data tr:nth-child(even){background-color: #f2f2f2}
+      table.data th, table.data td {
+        text-align: left;
+        padding: 8px;
+      }
 
-         
-            .sticky-header {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                z-index: 999;
-                background-color: #fff; /* adjust to your header color */
-                box-shadow: 0 2px 5px rgba(0,0,0,.2); /* optional: add a shadow to the header */
-            }
-            .sticky-header {
-            position: sticky;
-            top: 0;
-            z-index: 999;
-            background-color: #fff; /* replace with your desired background color */
-            }
+      table.data tr:nth-child(even){background-color: #f2f2f2}
 
-            /* Add sticky header to table */
-            #table thead th {
-                position: sticky;
-                top: 0;
-                z-index: 1;
-                background-color: #fff;
-            }
+      .sticky-header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: 999;
+        background-color: #fff; /* adjust to your header color */
+        box-shadow: 0 2px 5px rgba(0,0,0,.2); /* optional: add a shadow to the header */
+      }
 
-            .highlight {
-            background-color: yellow;
-            }
+      .sticky-header {
+        position: sticky;
+        top: 0;
+        z-index: 999;
+        background-color: #fff; /* replace with your desired background color */
+      }
 
+      /* Add sticky header to table */
+      #table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        background-color: #fff;
+      }
 
-            .h3-bgcolor{
-                color: #e60000;
-                padding-right: 0;
-                margin-right: 0;
-            }
+      .highlight {
+        background-color: yellow;
+      }
 
-            .header {
-              position: sticky;
-              top: 0;
-              z-index: 999;
-              border-block: 10px solid red;
-              padding: 10px;
-              margin-bottom: 10px;
-              display: flex;
-              align-items: center;
-              justify-content: space-between;
-            }
+      .h3-bgcolor{
+        color: #e60000;
+        padding-right: 0;
+        margin-right: 0;
+      }
 
-            .logo {
-              max-width: 100px;
-              height: auto;
-            }
+      .header {
+        position: sticky;
+        top: 0;
+        z-index: 999;
+        border-block: 10px solid red;
+        padding: 10px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background-color: white;
+      }
 
-            .title {
-              font-size: 35px;
-              font-weight: bold;
-            }
+      .logo {
+        max-width: 100px;
+        height: auto;
+      }
 
-            .logo-container {
-              margin-left: 20px;
-            }
+      .title {
+        font-size: 200%;
+        font-weight: bold;
+      }
 
+      .logo-container {
+        margin-left: 20px;
+      }
 
-            .input_box {
-                margin-right: 10px;
-            }
-            label {
-                font-size: 20px;
-                font-weight: bold;
-            }
+      .input_box {
+        margin-right: 10px;
+      }
 
-            input[type="submit"] {
-                font-size: 18px;
-                padding: 10px 20px;
-                font-weight: bold;
-              }
+      label {
+        font-size: 100%;
+        font-weight: bold;
+      }
 
+      input[type="submit"] {
+        font-size: 100%;
+        padding: 10px 20px;
+        font-weight: bold;
+      }
 
+      .container {
+        width: 100%;
+        max-width: 960px;
+        margin: 0 auto;
+      }
 
     </style>
 
 </head>
 <body>
+  <div class="background-image"></div>
     <header class="header">
       <h1 class="title">TOPSERVE TIMEKEEPING</h1>
       <div class="logo-container">
@@ -122,7 +141,7 @@
     </header>
 
 <div style="float: left; margin-left: 20px;">
-  <h2>Input Employee Data</h2>
+  <h3>Input Employee Data</h3>
   <br>
   <form method="post" action="/submit" onsubmit="return validateForm()">
     <!-- employee code -->
@@ -163,11 +182,13 @@
 </div>
 
 <div style="clear: both;"></div>
-<br><br>
+<br>
+<hr style="border-top: 3px double #8c8b8b;">
+<br>
 <div style="clear: both;"></div>
 
-<div style="float: left; margin-left: 20px;">
-  <h2>Upload Excel File</h2>
+<div style="float: left; margin-left: 20px; margin: 10px;">
+  <h3>Upload Excel File</h3>
   <form method="post" action="/upload" enctype="multipart/form-data" onsubmit="">
     <input type="file" name="file" id="fileInput" onchange="checkFileSelected()" style="font-weight: bold;">
     <input type="submit" value="Upload" id="submitButton" style="font-weight: bold;" disabled>
@@ -185,17 +206,14 @@
   </script>
 </div>
 
-<div style="float: left; margin-left: 20px;">
-  <h2>Download Summary</h2>
+<div style="float: left; margin-left: 20px; margin: 10px;">
+  <h3>Download Summary</h3>
   <p style="font-weight: bold;">Click the button to download the CSV file:</p>
   <a href="/download"><button id="downloadButton" style="font-weight: bold;">Download Excel</button></a>
 </div>
 
-
-
-
-<div style="float: left; margin-left: 20px;">
-    <h2 class="h3-bgcolor">Delete Data</h2>
+<div style="float: left; margin-left: 20px; margin: 10px;">
+    <h3 class="h3-bgcolor">Delete Data</h3>
     <form method="post" action="/delete">
       <label for="delete_employee_code">Delete Row</label>
       <input type="text" name="delete_employee_code" id="delete_employee_code" placeholder="Employee Code">
@@ -205,8 +223,8 @@
     </form>
 </div>
   
-<div style="float: left; margin-left: 20px;">
-    <h2 class="h3-bgcolor">Delete Table</h2>
+<div style="float: left; margin-left: 20px; margin: 10px;">
+    <h3 class="h3-bgcolor">Delete Table</h3>
     <form method="post" action="/delete_data" onsubmit="return confirmDelete();">
       <p style="font-weight: bold;">All employee data will be deleted</p>
       <button type="submit" name="/delete_data" style="font-weight: bold;">Delete Data</button>
@@ -218,10 +236,9 @@
     </script>
 </div>
 
-<div style="float: left; margin: 50px; margin-left: 100px;">
+<div style="float: left; margin: 50px; margin-left: 20px;">
     <a href="{{ url_for('table') }}" class="btn btn-primary" style="font-weight: bold;">Go to table</a>
 </div>
-
 
 
 <div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-labelledby="errorModalLabel" aria-hidden="true">

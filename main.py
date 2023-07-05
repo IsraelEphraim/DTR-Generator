@@ -466,6 +466,7 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
                     ND_regular_days_1st_8_hrs = 8 - ND_overtime
                     ND_regular_days_excess_8_hrs = ND_overtime - ND_regular_days_1st_8_hrs
 
+
             elif overtime < 8:
                 ot_first_8 = overtime
                 ot_first_8 = "{:.2f}".format(ot_first_8)
@@ -478,8 +479,6 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
                     ND_overtime = overtime - Night_diff
                     ND_regular_days_1st_8_hrs = overtime - ND_overtime
 
-
-        else:
             # These conditions are for Night Difference within the regular hours
             if actual_datetime_timein > datetime_start_night:
                 ND_regular_days_1st_8_hrsnotOT = date_time_end_night - actual_datetime_timein
@@ -493,6 +492,9 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
                 ND_regular_days_1st_8_hrsnotOT = datetime_end_night_before1 - actual_datetime_timein
                 ND_regular_days_1st_8_hrsnotOT = timedelta_to_decimal(ND_regular_days_1st_8_hrsnotOT)
 
+            print("ND_regular_days_1st_8_hrsnotOT", ND_regular_days_1st_8_hrsnotOT)
+
+        else:
 
             # This condition is for calculating the overtime
             if actual_datetime_timeout > datetime_timeout:
@@ -523,8 +525,10 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
                     if actual_datetime_timeout > datetime_start_night:
                         Night_diff = actual_datetime_timeout - datetime_start_night
                         Night_diff = timedelta_to_decimal(Night_diff)
+                        print("Night Difference", Night_diff)
                         ND_overtime = overtime - Night_diff
                         ND_regular_days_1st_8_hrs = overtime - ND_overtime
+                        print("ND_regular_days_1st_8_hrs", ND_regular_days_1st_8_hrs)
 
             # This line of code is for combining the night difference of regular hours and overtime
             ND_regular_days_1st_8_hrs = ND_regular_days_1st_8_hrs + ND_regular_days_1st_8_hrsnotOT
@@ -770,7 +774,7 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
     ND_special_holiday_RD_1st_8_hrs = hour_estimate(ND_special_holiday_RD_1st_8_hrs)
     ND_special_holiday_RD_excess_8_hrs = hour_estimate(ND_special_holiday_RD_excess_8_hrs)
 
-    print(overtime)
+    print("Overtime", overtime)
 
 
 
@@ -940,8 +944,19 @@ def upload():
 
         for i, row in df.iterrows():
             # Employee inputs
-            employee_name = row['Employee Name'].upper()
-            employee_code = row['Employee Code'].upper()
+            employee_name = row['Employee Name']
+            employee_code = row['Employee Code']
+
+            if not isinstance(employee_name, str):  # Use isinstance() to check if employee_name is not a string
+                print("End of Uploading")
+                break
+
+            if isinstance(employee_name, str):
+                employee_name = employee_name.upper()
+
+            if isinstance(employee_code, str):
+                employee_code = employee_code.upper()
+
             cost_center = row['Cost Center']
 
             # Date of transaction
@@ -961,6 +976,8 @@ def upload():
                 error_message = f"Invalid value {date_obj} in the Date column. Allowed format dd/mm/yyyy."
                 traceback.print_exc()  # Print the traceback for debugging purposes
                 return render_template('index.html', error_message=error_message)
+
+
 
             # Description inputs
             work_descript = row['Work Description'].lower()
@@ -989,6 +1006,8 @@ def upload():
             calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week, date_transact1, date_obj, work_descript,
                                   time_in, time_out, time_in1, time_out1, actual_time_in, actual_time_out,
                                   actual_time_in1, actual_time_out1)
+
+
 
 
         return render_template('index.html', dtr=dtr)
@@ -1248,8 +1267,9 @@ def download():
         status = employee_df['Status']
 
         # Check if the status is not approved and set overtime to 0
-        # if 'Not Approved' in status.values:
-        #     employee_df.loc[status == 'Not Approved', 'Overtime'] = 0
+        if 'Not Approved' in status.values:
+            employee_df.loc[status == 'Not Approved', 'Total of 8 hours Overtime'] = 0
+            employee_df.loc[status == 'Not Approved', 'Excess of 8 hours Overtime'] = 0
 
 
         total_working_days = employee_df.loc[(employee_df['Work Description'] == 'regular day') & (employee_df['Weekday or Weekend'] == 'Weekday'), 'Working Day'].sum()
