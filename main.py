@@ -591,10 +591,6 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
         overtime = 0
         legal_holiday = 8
 
-    elif work_descript == 'special holiday' and total_actual_datetime_in_out_int == 0 and total_datetime_in_out_int == 0:
-        overtime = 0
-        special_holiday = 8
-
 
 
     #IF PUMASOK YUNG EMPLOYEE DITO MAGCOCOMPUTE
