@@ -158,17 +158,24 @@
     <input type="date" name="start_date" id="start_date" value="{{ modified_date_str }}" class="input_box" required>
     <br><br>
     <!-- Working Day -->
-    <label for="work_descript">Working Day:</label>
+    <label for="work_descript">Work Description:</label>
     <select name="work_descript" id="work_descript" class="input_box" required>
-      <option value="Regular Day">Regular Day</option>
-      <option value="Special Holiday">Special holiday</option>
-      <option value="Legal Holiday">Legal holiday</option>
+      <option value="REGULAR">Regular</option>
+      <option value="REST DAY">Rest Day</option>
+    </select>
+
+    <label for="work_descript">Secondary Description:</label>
+    <select name="second_descript" id="second_descript" class="input_box" required>
+      <option value="REGULAR DAY">Regular Day</option>
+      <option value="REST DAY">Rest Day</option>
+      <option value="SPECIAL HOLIDAY">Special holiday</option>
+      <option value="LEGAL HOLIDAY">Legal holiday</option>
     </select>
     <!-- Time in -->
-    <label for="time_in">Time In:</label>
+    <label for="time_in">WS Time In:</label>
     <input type="time" name="time_in" id="time_in" value="{{ request.form.get('time_in', '') }}" class="input_box" required>
     <!-- Time out -->
-    <label for="time_out">Time Out:</label>
+    <label for="time_out">WS Time Out:</label>
     <input type="time" name="time_out" id="time_out" value="{{ request.form.get('time_out', '') }}" class="input_box" required>
     <!-- Actual Time in -->
     <label for="actual_time_in">Actual Time In:</label>

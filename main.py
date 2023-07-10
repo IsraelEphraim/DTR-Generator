@@ -39,8 +39,8 @@ def index():
                                     'Date',
                                     'Day',
                                     'Working Day',
-                                    'Weekday or Weekend',
                                     'Work Description',
+                                    'Secondary Description',
                                     'Time In',
                                     'Time Out',
                                     'Actual Time In',
@@ -136,15 +136,7 @@ def halfday(time_str, adjustment_hours):
 
     return adjusted_time_str
 
-def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week, date_transact1, date_obj, work_descript, time_in, time_out, time_in1, time_out1, actual_time_in, actual_time_out, actual_time_in1, actual_time_out1):
-    week_day = date_obj.weekday()
-    if week_day < 5:  # Weekday (Monday to Friday)
-        week_check = "Weekday"
-    else:  # Weekend day (Saturday or Sunday)
-        week_check = "Weekend"
-
-    #=====================================================================
-
+def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week, date_transact1, date_obj, work_descript, second_descript, time_in, time_out, time_in1, time_out1, actual_time_in, actual_time_out, actual_time_in1, actual_time_out1):
 
     #TOTAL OF SCHEDULED TIME IN AND TIME OUT FOR LATE AND UNDERTIME HINDI PARA SA COMPUTATIONG NG OVERTIME
     datetime_timein0 = datetime.combine(date_obj.date(), time_in1)
@@ -212,7 +204,7 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
 
     #UNDERTIME HOURS
 
-    if week_check == 'Weekday' and work_descript == 'regular day':
+    if second_descript == 'REGULAR' and work_descript == 'REGULAR DAY':
         if actual_datetime_timeout0 < datetime_timeout0:
             undertime_check_try = datetime_timeout0 - actual_datetime_timeout0
             undertime_check_try = timedelta_to_decimal(undertime_check_try)
@@ -247,23 +239,24 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
     # TOTAL OF ACTUAL TIME IN AND TIME OUT FOR COMPUTATION NG OVERTIME
 
     # Extract the hours and minutes from the input time
-    in_hours = actual_time_in1.hour
-    in_minutes = actual_time_in1.minute
+    if actual_time_in1 < time_in1:
+        in_hours = actual_time_in1.hour
+        in_minutes = actual_time_in1.minute
 
-    # Convert the time to a datetime object with the current date
-    current_date = datetime.now().date()
-    actual_time_in1_datetime = datetime.combine(current_date, actual_time_in1)
+        # Convert the time to a datetime object with the current date
+        current_date = datetime.now().date()
+        actual_time_in1_datetime = datetime.combine(current_date, actual_time_in1)
 
-    # Check if minutes is less than 30
-    if in_minutes < 30 and in_minutes >= 1:
-        # Set the minutes to 30
-        actual_time_in1_datetime += timedelta(minutes=30 - in_minutes)
-    elif in_minutes > 30 and in_minutes <= 59:
-        # Set the minutes to 0 and add 1 hour
-        actual_time_in1_datetime += timedelta(minutes=60 - in_minutes)
+        # Check if minutes is less than 30
+        if in_minutes < 30 and in_minutes >= 1:
+            # Set the minutes to 30
+            actual_time_in1_datetime += timedelta(minutes=30 - in_minutes)
+        elif in_minutes > 30 and in_minutes <= 59:
+            # Set the minutes to 0 and add 1 hour
+            actual_time_in1_datetime += timedelta(minutes=60 - in_minutes)
 
-    # Extract the time from the datetime object
-    actual_time_in1 = actual_time_in1_datetime.time()
+        # Extract the time from the datetime object
+        actual_time_in1 = actual_time_in1_datetime.time()
 
     #===============================================================
     # Extract the hours and minutes from the input time
@@ -285,15 +278,6 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
 
     # Extract the time from the datetime object
     actual_time_out1 = actual_time_out1_datetime.time()
-
-    # timein_threshold = '6:30'
-    # timein_threshold = datetime.strptime(timein_threshold, "%H:%M").time()
-    #
-    # if work_descript == 'regular day' and week_check == 'weekday':
-    #     if actual_time_in1 == timein_threshold:
-    #         actual_time_in1 = '7:30'
-    #         actual_time_in1 = datetime.strptime(actual_time_in1, "%H:%M").time()
-
 
     # ===============================================================
     actual_datetime_timein = datetime.combine(date_obj.date(), actual_time_in1)
@@ -328,7 +312,7 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
     #=====================================================================
     #NON CHARGEABLE BREAK
 
-    if total_datetime_in_out_int >= 5:
+    if total_actual_datetime_in_out_int >= 5:
         non_chargeable_break = time(1, 0, 0)
         non_chargeable_break_timedelta = timedelta(hours=non_chargeable_break.hour, minutes=non_chargeable_break.minute,
                                                    seconds=non_chargeable_break.second)
@@ -341,7 +325,7 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
 
     #=====================================================================
     #NET HOURS RENDERED
-    if week_check == 'Weekday' and work_descript == 'regular day':
+    if second_descript == 'REGULAR DAY' and work_descript == 'REGULAR':
         net_hours_rendered = total_datetime_in_out - non_chargeable_break_timedelta
         net_hours_rendered_str = timedelta_to_decimal(net_hours_rendered)
 
@@ -359,10 +343,10 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
         actual_render = float(actual_render)
 
 
-    elif work_descript == 'legal holiday' and total_actual_datetime_in_out_int == 0:
+    elif work_descript == 'LEGAL HOLIDAY' and total_actual_datetime_in_out_int == 0:
         actual_render = 0
 
-    elif work_descript == 'special holiday' and total_actual_datetime_in_out_int == 0:
+    elif work_descript == 'SPECIAL HOLIDAY' and total_actual_datetime_in_out_int == 0:
         actual_render = 0
 
     #=====================================================================
@@ -373,7 +357,7 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
     hour_rendered_str = int(hour_rendered_str)
 
 
-    if work_descript == 'legal holiday' or work_descript == 'special holiday' and total_actual_datetime_in_out_int == 0 and total_datetime_in_out_int == 0:
+    if work_descript == 'LEGAL HOLIDAY' or work_descript == 'SPECIAL HOLIDAY' and total_actual_datetime_in_out_int == 0 and total_datetime_in_out_int == 0:
         hour_rendered_str = 0
 
 
@@ -440,11 +424,10 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
 
 
 
-    if week_check == 'Weekday' and work_descript == 'regular day':
+    if work_descript == 'REGULAR' and second_descript == 'REGULAR DAY':
 
         #Para sa overtime na pinutol sa regular hours dami kasing alam
         if actual_datetime_timein > datetime_timeout or actual_datetime_timeout < datetime_timein:
-            print('Regular Overtime')
 
             undertime_check_try = 0
             workingday = 0
@@ -492,7 +475,6 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
                 ND_regular_days_1st_8_hrsnotOT = datetime_end_night_before1 - actual_datetime_timein
                 ND_regular_days_1st_8_hrsnotOT = timedelta_to_decimal(ND_regular_days_1st_8_hrsnotOT)
 
-            print("ND_regular_days_1st_8_hrsnotOT", ND_regular_days_1st_8_hrsnotOT)
 
         else:
 
@@ -547,7 +529,7 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
 
 
 
-    elif week_check == 'Weekend' and work_descript == 'regular day':
+    elif second_descript == 'REST DAY' and work_descript == 'REST DAY':
         if actual_render > 8:
             restday_ot_excess_8 = actual_render - 8
             restday_ot_first_8 = actual_render - restday_ot_excess_8
@@ -587,15 +569,15 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
 
 
     #IF DI PUMASOK YUNG EMPLOYEE
-    elif work_descript == 'legal holiday' and total_actual_datetime_in_out_int == 0 and total_datetime_in_out_int == 0:
+    elif work_descript == 'LEGAL HOLIDAY' and total_actual_datetime_in_out_int == 0 and total_datetime_in_out_int == 0:
         overtime = 0
         legal_holiday = 8
 
 
 
     #IF PUMASOK YUNG EMPLOYEE DITO MAGCOCOMPUTE
-    elif work_descript == 'legal holiday' and total_actual_datetime_in_out_int > 0 and total_datetime_in_out_int > 0:
-        if week_check == 'Weekday':
+    elif second_descript == 'LEGAL HOLIDAY' and total_actual_datetime_in_out_int > 0 and total_datetime_in_out_int > 0:
+        if work_descript == 'REGULAR':
             if actual_render > 8:
                 legal_holiday_excess_8 = actual_render - 8
                 legal_holiday_1st_8 = actual_render - legal_holiday_excess_8
@@ -635,7 +617,7 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
 
 
 
-        elif week_check == 'Weekend':
+        elif work_descript == 'REST DAY':
             if actual_render > 8:
                 legal_holiday_rd_excess_8 = actual_render - 8
                 legal_holiday_rd_1st_8 = actual_render - legal_holiday_rd_excess_8
@@ -677,8 +659,8 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
         legal_holiday_rd_1st_8 = hour_estimate(legal_holiday_rd_1st_8)
         legal_holiday_rd_excess_8 = hour_estimate(legal_holiday_rd_excess_8)
 
-    elif work_descript == 'special holiday' and total_actual_datetime_in_out_int > 0 and total_datetime_in_out_int > 0:
-        if week_check == 'Weekday':
+    elif second_descript == 'SPECIAL HOLIDAY' and total_actual_datetime_in_out_int > 0 and total_datetime_in_out_int > 0:
+        if work_descript == 'REGULAR':
             if actual_render > 8:
                 special_holiday_excess_8 = actual_render - 8
                 special_holiday_1st_8 = actual_render - special_holiday_excess_8
@@ -715,7 +697,7 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
                     ND_special_holiday_1st_8_hrs = timedelta_to_decimal(ND_special_holiday_1st_8_hrs)
 
 
-        elif week_check == 'Weekend':
+        elif work_descript == 'REST DAY':
             if actual_render > 8:
                 special_holiday_rd_excess_8 = actual_render - 8
                 special_holiday_rd_1st_8 = actual_render - special_holiday_rd_excess_8
@@ -780,9 +762,9 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
     status_OT = 'No OT'
     if overtime >= 1:
         status_OT = 'Not Approved'
-    elif work_descript == 'regular day' and overtime == 0:
+    elif work_descript == 'REGULAR DAY' and overtime == 0:
         status_OT = 'No OT'
-    elif work_descript == 'legal holiday' or work_descript == 'special holiday' and overtime == 0:
+    elif work_descript == 'LEGAL HOLIDAY' or work_descript == 'SPECIAL HOLIDAY' and overtime == 0:
         status_OT = 'Holiday'
 
     # Encoding of inputs to the dataframe
@@ -794,8 +776,8 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
                             'Date': [date_transact1],
                             'Day': [day_of_week],
                             'Working Day': [workingday],
-                            'Weekday or Weekend': [week_check],
                             'Work Description': [work_descript],
+                            'Secondary Description': [second_descript],
                             'Time In': [time_in],
                             'Time Out': [time_out],
                             'Actual Time In': [actual_time_in],
@@ -843,8 +825,8 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
                                     'Date',
                                     'Day',
                                     'Working Day',
-                                    'Weekday or Weekend',
                                     'Work Description',
+                                    'Secondary Description',
                                     'Time In',
                                     'Time Out',
                                     'Actual Time In',
@@ -901,8 +883,8 @@ def upload():
                                     'Date',
                                     'Day',
                                     'Working Day',
-                                    'Weekday or Weekend',
                                     'Work Description',
+                                    'Secondary Description',
                                     'Time In',
                                     'Time Out',
                                     'Actual Time In',
@@ -965,6 +947,7 @@ def upload():
                     date_obj = datetime.strptime(date_transact, "%Y-%m-%d %H:%M:%S")
                     date_transact1 = date_obj.date()
                     day_of_week = date_obj.strftime("%A")
+                    day_of_week = day_of_week.upper()
                 else:
                     date_obj = ""
             except Exception:
@@ -976,16 +959,16 @@ def upload():
 
 
             # Description inputs
-            work_descript = row['Work Description'].lower()
-            if work_descript.lower() == 'regular day':
-                work_descript = 'regular day'
-            elif work_descript.lower() == 'legal holiday':
-                work_descript = 'legal holiday'
-            elif work_descript.lower() == 'sunday' or work_descript.lower() == 'saturday':
-                work_descript = 'regular day'
+            work_descript = row['Work Description'].upper()
+            if work_descript.upper() == 'REGULAR DAY':
+                work_descript = 'REGULAR DAY'
+            elif work_descript.upper()== 'LEGAL HOLIDAY':
+                work_descript = 'LEGAL HOLIDAY'
             else:
                 error_message = f"Invalid value {work_descript} in the Work Description column. Allowed values are regular day, legal holiday, and special holiday."
                 return render_template('index.html', error_message=error_message)
+
+            second_descript = row['Secondary Description'].upper()
 
             # Work Hours Inputs
             time_in1 = datetime.strptime(str(row['Time In']), "%H:%M:%S").time()
@@ -999,7 +982,7 @@ def upload():
             actual_time_in = actual_time_in1.strftime("%H:%M")
             actual_time_out = actual_time_out1.strftime("%H:%M")
 
-            calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week, date_transact1, date_obj, work_descript,
+            calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week, date_transact1, date_obj, work_descript, second_descript,
                                   time_in, time_out, time_in1, time_out1, actual_time_in, actual_time_out,
                                   actual_time_in1, actual_time_out1)
 
@@ -1027,8 +1010,8 @@ def submit():
                                 'Date',
                                 'Day',
                                 'Working Day',
-                                'Weekday or Weekend',
                                 'Work Description',
+                                'Secondary Description',
                                 'Time In',
                                 'Time Out',
                                 'Actual Time In',
@@ -1078,6 +1061,7 @@ def submit():
         date_obj = datetime.strptime(date_transact, "%Y-%m-%d")
         date_transact1 = date_obj.date()
         day_of_week = date_obj.strftime("%A")
+        day_of_week = day_of_week.upper()
     else:
         date_obj = ""
         # Handle the case where the date is missing or empty
@@ -1096,7 +1080,8 @@ def submit():
     modified_date_str = date.strftime('%Y-%m-%d')
 
     #Description inputs
-    work_descript = request.form.get('work_descript').lower()
+    work_descript = request.form.get('work_descript').upper()
+    second_descript = request.form.get('second_descript').upper()
 
     #Work Hours Inputs
     time_in1 = datetime.strptime(request.form.get('time_in'), "%H:%M").time()
@@ -1110,7 +1095,7 @@ def submit():
     actual_time_out1 = datetime.strptime(request.form.get('actual_time_out'), "%H:%M").time()
     actual_time_out = actual_time_out1.strftime("%H:%M")
 
-    calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week, date_transact1, date_obj, work_descript, time_in, time_out, time_in1, time_out1, actual_time_in, actual_time_out, actual_time_in1, actual_time_out1)
+    calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week, date_transact1, date_obj, work_descript, second_descript, time_in, time_out, time_in1, time_out1, actual_time_in, actual_time_out, actual_time_in1, actual_time_out1)
 
 
     # Pass the HTML table to the template
@@ -1268,9 +1253,9 @@ def download():
             employee_df.loc[status == 'Not Approved', 'Excess of 8 hours Overtime'] = 0
 
 
-        total_working_days = employee_df.loc[(employee_df['Work Description'] == 'regular day') & (employee_df['Weekday or Weekend'] == 'Weekday'), 'Working Day'].sum()
-        working_hours1 = employee_df.loc[(employee_df['Work Description'] == 'regular day') & (employee_df['Weekday or Weekend'] == 'Weekday'), 'Hours Rendered'].sum()
-        tardiness1 = employee_df.loc[(employee_df['Work Description'] == 'regular day') & (employee_df['Weekday or Weekend'] == 'Weekday'), 'Tardiness'].sum()
+        total_working_days = employee_df.loc[(employee_df['Work Description'] == 'REGULAR DAY') & (employee_df['Secondary Description'] == 'REGULAR'), 'Working Day'].sum()
+        working_hours1 = employee_df.loc[(employee_df['Work Description'] == 'REGULAR DAY') & (employee_df['Secondary Description'] == 'REGULAR'), 'Hours Rendered'].sum()
+        tardiness1 = employee_df.loc[(employee_df['Work Description'] == 'REGULAR DAY') & (employee_df['Secondary Description'] == 'REGULAR'), 'Tardiness'].sum()
         RegularDay_Overtime = employee_df['Total of 8 hours Overtime'].sum()
         RegularDay_Overtime_Excess = employee_df['Excess of 8 hours Overtime'].sum()
         RegularDay_RestDay = 0
