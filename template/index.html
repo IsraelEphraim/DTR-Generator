@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Topserve Timekeeping System</title>
+    <title>Timekeeping System</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.14.0/css/bootstrap-select.min.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -126,6 +126,28 @@
         max-width: 960px;
         margin: 0 auto;
       }
+      body {
+        font-family: 'Cambria', sans-serif;
+        /* Add other font properties if desired */
+      }
+
+      /* Change the font family for the headers */
+      h1, h3 {
+        font-family: 'Berlin Sans FB', sans-serif;
+        /* Add other font properties if desired */
+      }
+
+      /* Change the font family for labels */
+      label {
+        font-family: 'Cambria', sans-serif;
+      }
+
+      
+      input, select {
+        font-family: 'Cambria', sans-serif;
+        
+      }
+      
 
     </style>
 
@@ -133,7 +155,7 @@
 <body>
   <div class="background-image"></div>
     <header class="header">
-      <h1 class="title">TOPSERVE TIMEKEEPING</h1>
+      <h1 class="title">TIMEKEEPING SYSTEM</h1>
       <div class="logo-container">
         <img src="{{ url_for('static', filename='Photos/HD_TOPSERVE.png') }}" alt="Logo" class="logo">
       </div>
@@ -226,8 +248,11 @@
       <input type="text" name="delete_employee_code" id="delete_employee_code" placeholder="Employee Code">
       <input type="date" name="delete_date" id="delete_date" placeholder="Date">
       <button type="submit" style="font-weight: bold;">Delete Row</button><br>
-      <p style="margin-left: 125.5px">Case Sensitive</p>
     </form>
+</div>
+
+<div style="float: left; margin: 50px; margin-left: 20px;">
+    <a href="{{ url_for('table') }}" class="btn btn-primary" style="font-weight: bold;">Go to table</a>
 </div>
   
 <div style="float: left; margin-left: 20px; margin: 10px;">
@@ -241,10 +266,6 @@
         return confirm("Are you sure you want to delete all employee data?");
       }
     </script>
-</div>
-
-<div style="float: left; margin: 50px; margin-left: 20px;">
-    <a href="{{ url_for('table') }}" class="btn btn-primary" style="font-weight: bold;">Go to table</a>
 </div>
 
 
