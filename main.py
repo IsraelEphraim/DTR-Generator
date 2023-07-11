@@ -569,11 +569,9 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
 
 
     #IF DI PUMASOK YUNG EMPLOYEE
-    elif work_descript == 'LEGAL HOLIDAY' and total_actual_datetime_in_out_int == 0 and total_datetime_in_out_int == 0:
+    elif second_descript == 'LEGAL HOLIDAY' and total_actual_datetime_in_out_int == 0 and total_datetime_in_out_int == 0:
         overtime = 0
         legal_holiday = 8
-
-
 
     #IF PUMASOK YUNG EMPLOYEE DITO MAGCOCOMPUTE
     elif second_descript == 'LEGAL HOLIDAY' and total_actual_datetime_in_out_int > 0 and total_datetime_in_out_int > 0:
@@ -1256,8 +1254,8 @@ def download():
         total_working_days = employee_df.loc[(employee_df['Work Description'] == 'REGULAR DAY') & (employee_df['Secondary Description'] == 'REGULAR'), 'Working Day'].sum()
         working_hours1 = employee_df.loc[(employee_df['Work Description'] == 'REGULAR DAY') & (employee_df['Secondary Description'] == 'REGULAR'), 'Hours Rendered'].sum()
         tardiness1 = employee_df.loc[(employee_df['Work Description'] == 'REGULAR DAY') & (employee_df['Secondary Description'] == 'REGULAR'), 'Tardiness'].sum()
-        RegularDay_Overtime = employee_df['Total of 8 hours Overtime'].sum()
-        RegularDay_Overtime_Excess = employee_df['Excess of 8 hours Overtime'].sum()
+        RegularDay_Overtime = employee_df['Overtime'].sum()
+        RegularDay_Overtime_Excess = 0
         RegularDay_RestDay = 0
         RegularDay_RestDay_Overtime = employee_df['RestDay Overtime for the 1st 8hrs'].sum()
         RegularDay_RestDay_Overtime_Excess = employee_df['Rest Day Overtime in Excess of 8hrs'].sum()
