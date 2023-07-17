@@ -172,13 +172,19 @@
     <!-- employee name -->
     <label for="employee_name">Employee Name:</label>
     <input type="text" name="employee_name" id="employee_name" value="{{ request.form.get('employee_name', '') }}" class="input_box" required>
+    <!-- position -->
+    <label for="position">Position:</label>
+    <input type="text" name="position" id="position" value="{{ request.form.get('position', '') }}" class="input_box" required>
+    <!-- location -->
+    <label for="location">Location:</label>
+    <input type="text" name="location" id="location" value="{{ request.form.get('location', '') }}" class="input_box" required>
+    <br><br>
     <!-- cost center -->
     <label for="cost_center">Cost Center:</label>
     <input type="text" name="cost_center" id="cost_center" value="{{ request.form.get('cost_center', '') }}" class="input_box" required>
     <!-- Date of transaction -->
     <label for="start_date">Date of Transaction:</label>
     <input type="date" name="start_date" id="start_date" value="{{ modified_date_str }}" class="input_box" required>
-    <br><br>
     <!-- Working Day -->
     <label for="work_descript">Work Description:</label>
     <select name="work_descript" id="work_descript" class="input_box" required>
@@ -193,6 +199,7 @@
       <option value="SPECIAL HOLIDAY">Special holiday</option>
       <option value="LEGAL HOLIDAY">Legal holiday</option>
     </select>
+    <br><br>
     <!-- Time in -->
     <label for="time_in">WS Time In:</label>
     <input type="time" name="time_in" id="time_in" value="{{ request.form.get('time_in', '') }}" class="input_box" required>
@@ -206,14 +213,17 @@
     <label for="actual_time_out">Actual Time Out:</label>
     <input type="time" name="actual_time_out" id="actual_time_out" value="{{ request.form.get('actual_time_out', '') }}" class="input_box" required>
     <input type="submit" value="Submit">
-    <br><br>
   </form>
+  <br>
+  <a href="{{ url_for('table') }}" class="btn btn-primary" style="font-weight: bold;">Go to table</a>
 </div>
 
+<!-- <div style="float: left; margin: 50px; margin-left: 20px;">
+    
+</div> -->
+
 <div style="clear: both;"></div>
-<br>
 <hr style="border-top: 3px double #8c8b8b;">
-<br>
 <div style="clear: both;"></div>
 
 <div style="float: left; margin-left: 20px; margin: 10px;">
@@ -249,10 +259,6 @@
       <input type="date" name="delete_date" id="delete_date" placeholder="Date">
       <button type="submit" style="font-weight: bold;">Delete Row</button><br>
     </form>
-</div>
-
-<div style="float: left; margin: 50px; margin-left: 20px;">
-    <a href="{{ url_for('table') }}" class="btn btn-primary" style="font-weight: bold;">Go to table</a>
 </div>
   
 <div style="float: left; margin-left: 20px; margin: 10px;">

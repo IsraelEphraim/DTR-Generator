@@ -35,6 +35,7 @@ def index():
                                     'Overtime',
                                     'Employee Code',
                                     'Employee Name',
+                                    'Position',
                                     'Cost Center',
                                     'Date',
                                     'Day',
@@ -50,8 +51,6 @@ def index():
                                     'Hours Rendered',
                                     'Undertime Hours',
                                     'Tardiness',
-                                    'Excess of 8 hours Overtime',
-                                    'Total of 8 hours Overtime',
                                     'RestDay Overtime for the 1st 8hrs',
                                     'Rest Day Overtime in Excess of 8hrs',
                                     'Special Holiday',
@@ -136,7 +135,7 @@ def halfday(time_str, adjustment_hours):
 
     return adjusted_time_str
 
-def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week, date_transact1, date_obj, work_descript, second_descript, time_in, time_out, time_in1, time_out1, actual_time_in, actual_time_out, actual_time_in1, actual_time_out1):
+def calculate_timeanddate(employee_name, employee_code, position, location, cost_center, day_of_week, date_transact1, date_obj, work_descript, second_descript, time_in, time_out, time_in1, time_out1, actual_time_in, actual_time_out, actual_time_in1, actual_time_out1):
 
     #TOTAL OF SCHEDULED TIME IN AND TIME OUT FOR LATE AND UNDERTIME HINDI PARA SA COMPUTATIONG NG OVERTIME
     datetime_timein0 = datetime.combine(date_obj.date(), time_in1)
@@ -167,8 +166,10 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
     total_actual_datetime_in_out0 = actual_datetime_timeout0 - actual_datetime_timein0
     total_actual_datetime_in_out_int0 = timedelta_to_decimal(total_actual_datetime_in_out0)
 
-    workingday = 1
-    if actual_datetime_timein0 > datetime_timein0:
+    workingday = 0
+    tardiness_str = 0
+    undertime_check_try = 0
+    if second_descript == "REGULAR DAY":
 
         check_halfday = actual_datetime_timein0 - datetime_timein0
         check_halfday = timedelta_to_decimal(check_halfday)
@@ -184,39 +185,41 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
         else:
             workingday = 1
 
-    print("Working Day:", workingday)
+        print("Working Day:", workingday)
 
-    # TARDINESS
-    expected = time(0, 0, 0)
-    expected_timedelta = timedelta(hours=expected.hour, minutes=expected.minute, seconds=expected.second)
+    if second_descript == "REGULAR DAY":
 
-    if actual_datetime_timein0 > datetime_timein0:
-        tardiness = actual_datetime_timein0 - datetime_timein0
-        tardiness_str = timedelta_to_decimal(tardiness)
-        tardiness_str = "{:.2f}".format(tardiness_str)
-        tardiness_str = float(tardiness_str)
+        # TARDINESS
+        expected = time(0, 0, 0)
+        expected_timedelta = timedelta(hours=expected.hour, minutes=expected.minute, seconds=expected.second)
 
-    else:
-        tardiness = expected_timedelta
-        tardiness_str = timedelta_to_decimal(tardiness)
-        tardiness_str = "{:.2f}".format(tardiness_str)
-        tardiness_str = float(tardiness_str)
+        if actual_datetime_timein0 > datetime_timein0:
+            tardiness = actual_datetime_timein0 - datetime_timein0
+            tardiness_str = timedelta_to_decimal(tardiness)
+            tardiness_str = "{:.2f}".format(tardiness_str)
+            tardiness_str = float(tardiness_str)
 
-    #UNDERTIME HOURS
+        else:
+            tardiness = expected_timedelta
+            tardiness_str = timedelta_to_decimal(tardiness)
+            tardiness_str = "{:.2f}".format(tardiness_str)
+            tardiness_str = float(tardiness_str)
 
-    if second_descript == 'REGULAR' and work_descript == 'REGULAR DAY':
-        if actual_datetime_timeout0 < datetime_timeout0:
-            undertime_check_try = datetime_timeout0 - actual_datetime_timeout0
-            undertime_check_try = timedelta_to_decimal(undertime_check_try)
-            undertime_check_try = "{:.2f}".format(undertime_check_try)
-            undertime_check_try = float(undertime_check_try)
+        #UNDERTIME HOURS
+
+        if second_descript == 'REGULAR' and work_descript == 'REGULAR DAY':
+            if actual_datetime_timeout0 < datetime_timeout0:
+                undertime_check_try = datetime_timeout0 - actual_datetime_timeout0
+                undertime_check_try = timedelta_to_decimal(undertime_check_try)
+                undertime_check_try = "{:.2f}".format(undertime_check_try)
+                undertime_check_try = float(undertime_check_try)
+            else:
+                undertime_check_try = 0
+
         else:
             undertime_check_try = 0
 
-    else:
-        undertime_check_try = 0
-
-    tardiness_str = tardiness_str + undertime_check_try
+        tardiness_str = tardiness_str + undertime_check_try
 
 
     #==========================================================================================================================================
@@ -282,12 +285,6 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
     # ===============================================================
     actual_datetime_timein = datetime.combine(date_obj.date(), actual_time_in1)
 
-    if actual_datetime_timein < datetime_timein:
-        diff1 = datetime_timein - actual_datetime_timein
-        diff1 = timedelta_to_decimal(diff1)
-        if diff1 < 1:
-            actual_datetime_timein = datetime_timein
-
     if actual_time_in1 > actual_time_out1:
         actual_add_day = timedelta(days=1)
         actual_new_day = date_obj.date() + actual_add_day
@@ -306,7 +303,7 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
     print(f"OUT: {actual_time_out1} of {employee_name}")
 
     # ITO YUNG TOTAL BOSS
-    total_actual_datetime_in_out =  actual_datetime_timeout - actual_datetime_timein
+    total_actual_datetime_in_out = actual_datetime_timeout - actual_datetime_timein
     total_actual_datetime_in_out_int = timedelta_to_decimal(total_actual_datetime_in_out)
 
     #=====================================================================
@@ -349,6 +346,8 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
     elif work_descript == 'SPECIAL HOLIDAY' and total_actual_datetime_in_out_int == 0:
         actual_render = 0
 
+    print("Total actual shift", total_actual_datetime_in_out)
+
     #=====================================================================
     # HOURS RENDERED
 
@@ -383,8 +382,6 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
 
     # VARIABLES TO LODS
     overtime = 0
-    ot_excess_8 = 0
-    ot_first_8  = 0
 
     restday_ot_first_8 = 0
     restday_ot_excess_8 = 0
@@ -406,6 +403,7 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
 
     ND_regular_days_1st_8_hrs = 0
     ND_regular_days_excess_8_hrs = 0
+    ND_regular_days_excess_8_hrs1 = 0
 
     ND_regular_days_RD_1st_8_hrs = 0
     ND_regular_days_RD_excess_8_hrs = 0
@@ -425,111 +423,84 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
 
 
     if work_descript == 'REGULAR' and second_descript == 'REGULAR DAY':
+        print("Regular and Regular Day")
+        # These conditions are for Night Difference within the regular hours
+        if actual_datetime_timein > datetime_start_night and actual_datetime_timeout > date_time_end_night:
+            ND_regular_days_1st_8_hrs = date_time_end_night - actual_datetime_timein
+            ND_regular_days_1st_8_hrs = timedelta_to_decimal(ND_regular_days_1st_8_hrs)
+            print("Pumasok sa Night Difference condition 1")
 
-        #Para sa overtime na pinutol sa regular hours dami kasing alam
+        elif actual_datetime_timein < datetime_start_night and actual_datetime_timeout > datetime_start_night and datetime_timein < datetime_start_night and datetime_timeout > datetime_start_night:
+            ND_regular_days_1st_8_hrs = actual_datetime_timeout - datetime_start_night
+            ND_regular_days_1st_8_hrs = timedelta_to_decimal(ND_regular_days_1st_8_hrs)
+            print("Pumasok sa Night Difference condition 2")
+
+        elif actual_datetime_timein < datetime_end_night_before1 and datetime_timein < datetime_end_night_before1:
+            ND_regular_days_1st_8_hrs = datetime_end_night_before1 - actual_datetime_timein
+            ND_regular_days_1st_8_hrs = timedelta_to_decimal(ND_regular_days_1st_8_hrs)
+            print("Pumasok sa Night Difference condition 3")
+
+        #Para sa overtime na pinutol sa regular hours
         if actual_datetime_timein > datetime_timeout or actual_datetime_timeout < datetime_timein:
+            print("Pumasok sa overtime na pinutol sa regular hours")
 
             undertime_check_try = 0
             workingday = 0
             tardiness_str = 0
             overtime = total_actual_datetime_in_out_int
-            if overtime > 8:
-                ot_excess_8 = overtime - 8
-                ot_first_8 = overtime - ot_excess_8
-                ot_excess_8 = "{:.2f}".format(ot_excess_8)
-                ot_first_8 = "{:.2f}".format(ot_first_8)
-                ot_excess_8 = float(ot_excess_8)
-                ot_first_8 = float(ot_first_8)
-
-                # These conditions are for Night Difference within the Overtime
-                if actual_datetime_timeout > datetime_start_night:
-                    Night_diff = actual_datetime_timeout - datetime_start_night
-                    Night_diff = timedelta_to_decimal(Night_diff)
-                    ND_overtime = overtime - Night_diff
-                    ND_regular_days_1st_8_hrs = 8 - ND_overtime
-                    ND_regular_days_excess_8_hrs = ND_overtime - ND_regular_days_1st_8_hrs
 
 
-            elif overtime < 8:
-                ot_first_8 = overtime
-                ot_first_8 = "{:.2f}".format(ot_first_8)
-                ot_first_8 = float(ot_first_8)
+            # These conditions are for Night Difference within the Overtime
+            if actual_datetime_timeout > datetime_start_night:
+                Night_diff = actual_datetime_timeout - datetime_start_night
+                Night_diff = timedelta_to_decimal(Night_diff)
+                ND_regular_days_excess_8_hrs1 = overtime - Night_diff
 
-                # These conditions are for Night Difference within the Overtime
-                if actual_datetime_timeout > datetime_start_night:
-                    Night_diff = actual_datetime_timeout - datetime_start_night
-                    Night_diff = timedelta_to_decimal(Night_diff)
-                    ND_overtime = overtime - Night_diff
-                    ND_regular_days_1st_8_hrs = overtime - ND_overtime
 
-            # These conditions are for Night Difference within the regular hours
-            if actual_datetime_timein > datetime_start_night:
-                ND_regular_days_1st_8_hrsnotOT = date_time_end_night - actual_datetime_timein
-                ND_regular_days_1st_8_hrsnotOT = timedelta_to_decimal(ND_regular_days_1st_8_hrsnotOT)
-
-            elif actual_datetime_timeout > datetime_start_night and actual_datetime_timein < datetime_start_night:
-                ND_regular_days_1st_8_hrsnotOT = actual_datetime_timeout - datetime_start_night
-                ND_regular_days_1st_8_hrsnotOT = timedelta_to_decimal(ND_regular_days_1st_8_hrsnotOT)
-
-            elif actual_datetime_timein < datetime_end_night_before1:
-                ND_regular_days_1st_8_hrsnotOT = datetime_end_night_before1 - actual_datetime_timein
-                ND_regular_days_1st_8_hrsnotOT = timedelta_to_decimal(ND_regular_days_1st_8_hrsnotOT)
 
 
         else:
-
+            print("Pumasok sa overtime")
             # This condition is for calculating the overtime
-            if actual_datetime_timeout > datetime_timeout:
+            if actual_datetime_timeout > datetime_timeout or actual_datetime_timein < datetime_timein:
+                print("Pumasok sa overtime")
+                early_in = 0
+                if actual_datetime_timein < datetime_timein:
+                    print("May early in")
+                    early_in = datetime_timein - actual_datetime_timein
+                    early_in = timedelta_to_decimal(early_in)
                 overtime = actual_datetime_timeout - datetime_timeout
                 overtime = timedelta_to_decimal(overtime)
-                if overtime > 8:
-                    ot_excess_8 = overtime - 8
-                    ot_first_8 = overtime - ot_excess_8
-                    ot_excess_8 = "{:.2f}".format(ot_excess_8)
-                    ot_first_8 = "{:.2f}".format(ot_first_8)
-                    ot_excess_8 = float(ot_excess_8)
-                    ot_first_8 = float(ot_first_8)
+                overtime = overtime + early_in
 
-                    # These conditions are for Night Difference within the Overtime
-                    if actual_datetime_timeout > datetime_start_night:
-                        Night_diff = actual_datetime_timeout - datetime_start_night
-                        Night_diff = timedelta_to_decimal(Night_diff)
-                        ND_overtime = overtime - Night_diff
-                        ND_regular_days_1st_8_hrs = 8 - ND_overtime
-                        ND_regular_days_excess_8_hrs = ND_overtime - ND_regular_days_1st_8_hrs
 
-                elif overtime < 8:
-                    ot_first_8 = overtime
-                    ot_first_8 = "{:.2f}".format(ot_first_8)
-                    ot_first_8 = float(ot_first_8)
+                # These conditions are for Night Difference within the Overtime
+                if actual_datetime_timeout > datetime_start_night:
+                    print("Night Difference within the Regular Overtime")
+                    Night_diff = actual_datetime_timeout - datetime_start_night
+                    ND_regular_days_excess_8_hrs = timedelta_to_decimal(Night_diff)
 
-                    # These conditions are for Night Difference within the Overtime
-                    if actual_datetime_timeout > datetime_start_night:
-                        Night_diff = actual_datetime_timeout - datetime_start_night
-                        Night_diff = timedelta_to_decimal(Night_diff)
-                        print("Night Difference", Night_diff)
-                        ND_overtime = overtime - Night_diff
-                        ND_regular_days_1st_8_hrs = overtime - ND_overtime
-                        print("ND_regular_days_1st_8_hrs", ND_regular_days_1st_8_hrs)
+                elif actual_datetime_timein < datetime_end_night_before1:
+                    print("Night Difference within the Regular Overtime early in")
+                    Night_diff = datetime_end_night_before1 - actual_datetime_timein
+                    Night_diff = timedelta_to_decimal(Night_diff)
+                    ND_regular_days_excess_8_hrs1 = Night_diff
 
-            # This line of code is for combining the night difference of regular hours and overtime
-            ND_regular_days_1st_8_hrs = ND_regular_days_1st_8_hrs + ND_regular_days_1st_8_hrsnotOT
 
 
             # This line of code is for subtracting the hours outside the Night difference.
             # For future coder sorry sakit na ng ulo ko yan na naisip kong solution sa problem hahahaha
-            if actual_datetime_timeout > date_time_end_night:
-                cancel_notND = actual_datetime_timeout - date_time_end_night
-                cancel_notND = timedelta_to_decimal(cancel_notND)
-                ND_regular_days_1st_8_hrs = ND_regular_days_1st_8_hrs - cancel_notND
+        if actual_datetime_timeout > date_time_end_night:
+            print("Nagana pala tong cancel ND")
+            cancel_notND = actual_datetime_timeout - date_time_end_night
+            cancel_notND = timedelta_to_decimal(cancel_notND)
+            ND_regular_days_excess_8_hrs = ND_regular_days_excess_8_hrs - cancel_notND
 
-            overtime = hour_estimate(overtime)
-            ot_excess_8 = hour_estimate(ot_excess_8)
-            ot_first_8 = hour_estimate(ot_first_8)
-
-
+        ND_regular_days_excess_8_hrs = ND_regular_days_excess_8_hrs + ND_regular_days_excess_8_hrs1
+        overtime = hour_estimate(overtime)
 
     elif second_descript == 'REST DAY' and work_descript == 'REST DAY':
+        print("REST DAY and REST DAY")
         if actual_render > 8:
             restday_ot_excess_8 = actual_render - 8
             restday_ot_first_8 = actual_render - restday_ot_excess_8
@@ -538,13 +509,19 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
             overtime = 0
 
             if actual_datetime_timeout > datetime_start_night:
-                Night_diff = actual_datetime_timeout - datetime_start_night
-                Night_diff = timedelta_to_decimal(Night_diff)
-                ND_overtime = actual_render - Night_diff
-                ND_regular_days_RD_1st_8_hrs = 8 - ND_overtime
-                ND_regular_days_RD_excess_8_hrs = ND_overtime - ND_regular_days_1st_8_hrs
 
-            elif actual_datetime_timein < datetime_end_night_before1:
+                start_shift = max(datetime_start_night, actual_datetime_timein)
+                end_shift = min(date_time_end_night, actual_datetime_timein + timedelta(hours=9))
+                Night_diff = max(timedelta(), end_shift - start_shift)
+                excess_ND = actual_datetime_timeout - datetime_start_night
+                Night_diff = timedelta_to_decimal(Night_diff)
+                excess_ND = timedelta_to_decimal(excess_ND)
+                excess_diff = excess_ND - Night_diff
+
+                ND_regular_days_RD_excess_8_hrs = excess_diff
+                ND_regular_days_RD_1st_8_hrs = Night_diff
+
+            if actual_datetime_timein < datetime_end_night_before1:
                 ND_regular_days_RD_1st_8_hrs = datetime_end_night_before1 - actual_datetime_timein
                 ND_regular_days_RD_1st_8_hrs = timedelta_to_decimal(ND_regular_days_RD_1st_8_hrs)
 
@@ -556,10 +533,10 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
             if actual_datetime_timeout > datetime_start_night:
                 Night_diff = actual_datetime_timeout - datetime_start_night
                 Night_diff = timedelta_to_decimal(Night_diff)
-                ND_overtime = actual_render - Night_diff
-                ND_regular_days_RD_1st_8_hrs = 8 - ND_overtime
+                ND_overtime = Night_diff
+                ND_regular_days_RD_1st_8_hrs = ND_overtime
 
-            elif actual_datetime_timein < datetime_end_night_before1:
+            if actual_datetime_timein < datetime_end_night_before1:
                 ND_regular_days_RD_1st_8_hrs = datetime_end_night_before1 - actual_datetime_timein
                 ND_regular_days_RD_1st_8_hrs = timedelta_to_decimal(ND_regular_days_RD_1st_8_hrs)
 
@@ -569,14 +546,15 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
 
 
     #IF DI PUMASOK YUNG EMPLOYEE
-    elif second_descript == 'LEGAL HOLIDAY' and total_actual_datetime_in_out_int == 0 and total_datetime_in_out_int == 0:
+    elif second_descript == 'LEGAL HOLIDAY' and work_descript == 'REGULAR' and total_actual_datetime_in_out_int == 0:
         overtime = 0
         legal_holiday = 8
 
     #IF PUMASOK YUNG EMPLOYEE DITO MAGCOCOMPUTE
     elif second_descript == 'LEGAL HOLIDAY' and total_actual_datetime_in_out_int > 0 and total_datetime_in_out_int > 0:
         if work_descript == 'REGULAR':
-            if actual_render > 8:
+            print("Regular and Legal Holiday")
+            if actual_render >= 8:
                 legal_holiday_excess_8 = actual_render - 8
                 legal_holiday_1st_8 = actual_render - legal_holiday_excess_8
                 legal_holiday_excess_8 = "{:.2f}".format(legal_holiday_excess_8)
@@ -584,13 +562,21 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
 
                 #These conditions are for Night Difference
                 if actual_datetime_timeout > datetime_start_night:
-                    Night_diff = actual_datetime_timeout - datetime_start_night
-                    Night_diff = timedelta_to_decimal(Night_diff)
-                    ND_overtime = actual_render - Night_diff
-                    ND_legal_holiday_1st_8_hrs = 8 - ND_overtime
-                    ND_legal_holiday_excess_8_hrs = ND_overtime - ND_legal_holiday_1st_8_hrs
 
-                elif actual_datetime_timein < datetime_end_night_before1:
+                    start_shift = max(datetime_start_night, actual_datetime_timein)
+                    end_shift = min(date_time_end_night, actual_datetime_timein + timedelta(hours=9))
+                    Night_diff = max(timedelta(), end_shift - start_shift)
+                    excess_ND = actual_datetime_timeout - datetime_start_night
+                    Night_diff = timedelta_to_decimal(Night_diff)
+                    excess_ND = timedelta_to_decimal(excess_ND)
+                    excess_diff = excess_ND - Night_diff
+
+                    if ND_legal_holiday_1st_8_hrs >= 8:
+                        ND_legal_holiday_excess_8_hrs= excess_diff
+                    ND_legal_holiday_1st_8_hrs = Night_diff
+
+
+                if actual_datetime_timein < datetime_end_night_before1:
                     ND_legal_holiday_1st_8_hrs = datetime_end_night_before1 - actual_datetime_timein
                     ND_legal_holiday_1st_8_hrs = timedelta_to_decimal(ND_legal_holiday_1st_8_hrs)
 
@@ -606,16 +592,17 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
                 if actual_datetime_timeout > datetime_start_night:
                     Night_diff = actual_datetime_timeout - datetime_start_night
                     Night_diff = timedelta_to_decimal(Night_diff)
-                    ND_overtime = actual_render - Night_diff
-                    ND_legal_holiday_1st_8_hrs = 8 - ND_overtime
+                    ND_overtime = Night_diff
+                    ND_legal_holiday_1st_8_hrs = ND_overtime
 
-                elif actual_datetime_timein < datetime_end_night_before1:
+                if actual_datetime_timein < datetime_end_night_before1:
                     ND_legal_holiday_1st_8_hrs = datetime_end_night_before1 - actual_datetime_timein
                     ND_legal_holiday_1st_8_hrs = timedelta_to_decimal(ND_legal_holiday_1st_8_hrs)
 
 
 
         elif work_descript == 'REST DAY':
+            print("Rest and Legal Holiday")
             if actual_render > 8:
                 legal_holiday_rd_excess_8 = actual_render - 8
                 legal_holiday_rd_1st_8 = actual_render - legal_holiday_rd_excess_8
@@ -624,13 +611,20 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
 
                 # These conditions are for Night Difference
                 if actual_datetime_timeout > datetime_start_night:
-                    Night_diff = actual_datetime_timeout - datetime_start_night
-                    Night_diff = timedelta_to_decimal(Night_diff)
-                    ND_overtime = actual_render - Night_diff
-                    ND_legal_holiday_RD_1st_8_hrs = 8 - ND_overtime
-                    ND_legal_holiday_RD_excess_8_hrs = ND_overtime - ND_legal_holiday_RD_1st_8_hrs
 
-                elif actual_datetime_timein < datetime_end_night_before1:
+                    start_shift = max(datetime_start_night, actual_datetime_timein)
+                    end_shift = min(date_time_end_night, actual_datetime_timein + timedelta(hours=9))
+                    Night_diff = max(timedelta(), end_shift - start_shift)
+                    excess_ND = actual_datetime_timeout - datetime_start_night
+                    Night_diff = timedelta_to_decimal(Night_diff)
+                    excess_ND = timedelta_to_decimal(excess_ND)
+                    excess_diff = excess_ND - Night_diff
+
+                    if ND_legal_holiday_RD_1st_8_hrs >= 8:
+                        ND_legal_holiday_RD_excess_8_hrs = excess_diff
+                    ND_legal_holiday_RD_1st_8_hrs = Night_diff
+
+                if actual_datetime_timein < datetime_end_night_before1:
                     ND_legal_holiday_RD_1st_8_hrs = datetime_end_night_before1 - actual_datetime_timein
                     ND_legal_holiday_RD_1st_8_hrs = timedelta_to_decimal(ND_legal_holiday_RD_1st_8_hrs)
 
@@ -644,10 +638,10 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
                 if actual_datetime_timeout > datetime_start_night:
                     Night_diff = actual_datetime_timeout - datetime_start_night
                     Night_diff = timedelta_to_decimal(Night_diff)
-                    ND_overtime = actual_render - Night_diff
-                    ND_legal_holiday_RD_1st_8_hrs = 8 - ND_overtime
+                    ND_overtime = Night_diff
+                    ND_legal_holiday_RD_1st_8_hrs = ND_overtime
 
-                elif actual_datetime_timein < datetime_end_night_before1:
+                if actual_datetime_timein < datetime_end_night_before1:
                     ND_legal_holiday_RD_1st_8_hrs = datetime_end_night_before1 - actual_datetime_timein
                     ND_legal_holiday_RD_1st_8_hrs = timedelta_to_decimal(ND_legal_holiday_RD_1st_8_hrs)
 
@@ -659,6 +653,7 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
 
     elif second_descript == 'SPECIAL HOLIDAY' and total_actual_datetime_in_out_int > 0 and total_datetime_in_out_int > 0:
         if work_descript == 'REGULAR':
+            print("Regular and special Holiday")
             if actual_render > 8:
                 special_holiday_excess_8 = actual_render - 8
                 special_holiday_1st_8 = actual_render - special_holiday_excess_8
@@ -667,13 +662,20 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
 
                 # These conditions are for Night Difference
                 if actual_datetime_timeout > datetime_start_night:
-                    Night_diff = actual_datetime_timeout - datetime_start_night
+                    start_shift = max(datetime_start_night, actual_datetime_timein)
+                    end_shift = min(date_time_end_night, actual_datetime_timein + timedelta(hours=9))
+                    Night_diff = max(timedelta(), end_shift - start_shift)
+                    excess_ND = actual_datetime_timeout - datetime_start_night
                     Night_diff = timedelta_to_decimal(Night_diff)
-                    ND_overtime = actual_render - Night_diff
-                    ND_special_holiday_1st_8_hrs = 8 - ND_overtime
-                    ND_special_holiday_excess_8_hrs = ND_overtime - ND_special_holiday_1st_8_hrs
+                    excess_ND = timedelta_to_decimal(excess_ND)
+                    excess_diff = excess_ND - Night_diff
 
-                elif actual_datetime_timein < datetime_end_night_before1:
+                    if ND_special_holiday_1st_8_hrs >= 8:
+                        ND_special_holiday_excess_8_hrs = excess_diff
+                    ND_special_holiday_1st_8_hrs = Night_diff
+
+
+                if actual_datetime_timein < datetime_end_night_before1:
                     ND_special_holiday_1st_8_hrs = datetime_end_night_before1 - actual_datetime_timein
                     ND_special_holiday_1st_8_hrs = timedelta_to_decimal(ND_special_holiday_1st_8_hrs)
 
@@ -687,15 +689,16 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
                 if actual_datetime_timeout > datetime_start_night:
                     Night_diff = actual_datetime_timeout - datetime_start_night
                     Night_diff = timedelta_to_decimal(Night_diff)
-                    ND_overtime = actual_render - Night_diff
-                    ND_special_holiday_1st_8_hrs = 8 - ND_overtime
+                    ND_overtime = Night_diff
+                    ND_special_holiday_1st_8_hrs = ND_overtime
 
-                elif actual_datetime_timein < datetime_end_night_before1:
+                if actual_datetime_timein < datetime_end_night_before1:
                     ND_special_holiday_1st_8_hrs = datetime_end_night_before1 - actual_datetime_timein
                     ND_special_holiday_1st_8_hrs = timedelta_to_decimal(ND_special_holiday_1st_8_hrs)
 
 
         elif work_descript == 'REST DAY':
+            print("Restday and special Holiday")
             if actual_render > 8:
                 special_holiday_rd_excess_8 = actual_render - 8
                 special_holiday_rd_1st_8 = actual_render - special_holiday_rd_excess_8
@@ -704,13 +707,19 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
 
                 # These conditions are for Night Difference
                 if actual_datetime_timeout > datetime_start_night:
-                    Night_diff = actual_datetime_timeout - datetime_start_night
+                    start_shift = max(datetime_start_night, actual_datetime_timein)
+                    end_shift = min(date_time_end_night, actual_datetime_timein + timedelta(hours=9))
+                    Night_diff = max(timedelta(), end_shift - start_shift)
+                    excess_ND = actual_datetime_timeout - datetime_start_night
                     Night_diff = timedelta_to_decimal(Night_diff)
-                    ND_overtime = actual_render - Night_diff
-                    ND_special_holiday_RD_1st_8_hrs = 8 - ND_overtime
-                    ND_special_holiday_RD_excess_8_hrs = ND_overtime - ND_special_holiday_RD_1st_8_hrs
+                    excess_ND = timedelta_to_decimal(excess_ND)
+                    excess_diff = excess_ND - Night_diff
 
-                elif actual_datetime_timein < datetime_end_night_before1:
+                    if ND_special_holiday_RD_1st_8_hrs >= 8:
+                        ND_special_holiday_RD_excess_8_hrs = excess_diff
+                    ND_special_holiday_RD_1st_8_hrs = Night_diff
+
+                if actual_datetime_timein < datetime_end_night_before1:
                     ND_special_holiday_RD_1st_8_hrs = datetime_end_night_before1 - actual_datetime_timein
                     ND_special_holiday_RD_1st_8_hrs = timedelta_to_decimal(ND_special_holiday_RD_1st_8_hrs)
 
@@ -724,10 +733,10 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
                 if actual_datetime_timeout > datetime_start_night:
                     Night_diff = actual_datetime_timeout - datetime_start_night
                     Night_diff = timedelta_to_decimal(Night_diff)
-                    ND_overtime = actual_render - Night_diff
-                    ND_special_holiday_RD_1st_8_hrs = 8 - ND_overtime
+                    ND_overtime = Night_diff
+                    ND_special_holiday_RD_1st_8_hrs = ND_overtime
 
-                elif actual_datetime_timein < datetime_end_night_before1:
+                if actual_datetime_timein < datetime_end_night_before1:
                     ND_special_holiday_RD_1st_8_hrs = datetime_end_night_before1 - actual_datetime_timein
                     ND_special_holiday_RD_1st_8_hrs = timedelta_to_decimal(ND_special_holiday_RD_1st_8_hrs)
 
@@ -751,6 +760,9 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
     ND_special_holiday_RD_excess_8_hrs = hour_estimate(ND_special_holiday_RD_excess_8_hrs)
 
     print("Overtime", overtime)
+    print("")
+    print("========================================================")
+    print("")
 
 
 
@@ -770,6 +782,8 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
                             'Overtime': [overtime],
                             'Employee Code': [employee_code],
                             'Employee Name': [employee_name],
+                            'Position': [position],
+                            'Location': [location],
                             'Cost Center': [cost_center],
                             'Date': [date_transact1],
                             'Day': [day_of_week],
@@ -785,8 +799,6 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
                             'Hours Rendered': [hour_rendered_str],
                             'Undertime Hours': [undertime_check_try],
                             'Tardiness': [tardiness_str],
-                            'Excess of 8 hours Overtime': [ot_excess_8],
-                            'Total of 8 hours Overtime': [ot_first_8],
                             'RestDay Overtime for the 1st 8hrs': [restday_ot_first_8],
                             'Rest Day Overtime in Excess of 8hrs': [restday_ot_excess_8],
                             'Special Holiday': [special_holiday],
@@ -819,6 +831,8 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
                                     'Overtime',
                                     'Employee Code',
                                     'Employee Name',
+                                    'Position',
+                                    'Location',
                                     'Cost Center',
                                     'Date',
                                     'Day',
@@ -834,8 +848,6 @@ def calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week
                                     'Hours Rendered',
                                     'Undertime Hours',
                                     'Tardiness',
-                                    'Excess of 8 hours Overtime',
-                                    'Total of 8 hours Overtime',
                                     'RestDay Overtime for the 1st 8hrs',
                                     'Rest Day Overtime in Excess of 8hrs',
                                     'Special Holiday',
@@ -877,6 +889,8 @@ def upload():
                                     'Overtime',
                                     'Employee Code',
                                     'Employee Name',
+                                    'Position',
+                                    'Location',
                                     'Cost Center',
                                     'Date',
                                     'Day',
@@ -892,8 +906,6 @@ def upload():
                                     'Hours Rendered',
                                     'Undertime Hours',
                                     'Tardiness',
-                                    'Excess of 8 hours Overtime',
-                                    'Total of 8 hours Overtime',
                                     'RestDay Overtime for the 1st 8hrs',
                                     'Rest Day Overtime in Excess of 8hrs',
                                     'Special Holiday',
@@ -933,7 +945,9 @@ def upload():
             if isinstance(employee_code, str):
                 employee_code = employee_code.upper()
 
-            cost_center = row['Cost Center']
+            position = row['Position'].upper()
+            location = row['Location'].upper()
+            cost_center = row['Cost Center'].upper()
 
             # Date of transaction
             date_obj = ""
@@ -958,20 +972,20 @@ def upload():
 
             # Description inputs
             work_descript = row['Work Description'].upper()
-            if work_descript.upper() == 'REGULAR DAY':
-                work_descript = 'REGULAR DAY'
-            elif work_descript.upper()== 'LEGAL HOLIDAY':
-                work_descript = 'LEGAL HOLIDAY'
-            else:
-                error_message = f"Invalid value {work_descript} in the Work Description column. Allowed values are regular day, legal holiday, and special holiday."
-                return render_template('index.html', error_message=error_message)
+            # if work_descript.upper() == 'REGULAR':
+            #     work_descript = 'REGULAR'
+            # elif work_descript.upper() == 'REST DAY':
+            #     work_descript = 'REST DAY'
+            # else:
+            #     error_message = f"Invalid value {work_descript} in the Work Description column. Allowed values are regular day, legal holiday, and special holiday."
+            #     return render_template('index.html', error_message=error_message)
 
             second_descript = row['Secondary Description'].upper()
 
             # Work Hours Inputs
-            time_in1 = datetime.strptime(str(row['Time In']), "%H:%M:%S").time()
+            time_in1 = datetime.strptime(str(row['WS Time In']), "%H:%M:%S").time()
             time_in = time_in1.strftime("%H:%M")
-            time_out1 = datetime.strptime(str(row['Time Out']), "%H:%M:%S").time()
+            time_out1 = datetime.strptime(str(row['WS Time Out']), "%H:%M:%S").time()
             time_out = time_out1.strftime("%H:%M")
 
             # Actual Time in and out
@@ -980,7 +994,7 @@ def upload():
             actual_time_in = actual_time_in1.strftime("%H:%M")
             actual_time_out = actual_time_out1.strftime("%H:%M")
 
-            calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week, date_transact1, date_obj, work_descript, second_descript,
+            calculate_timeanddate(employee_name, employee_code, position, location, cost_center, day_of_week, date_transact1, date_obj, work_descript, second_descript,
                                   time_in, time_out, time_in1, time_out1, actual_time_in, actual_time_out,
                                   actual_time_in1, actual_time_out1)
 
@@ -1004,6 +1018,8 @@ def submit():
                                 'Overtime',
                                 'Employee Code',
                                 'Employee Name',
+                                'Position',
+                                'Location',
                                 'Cost Center',
                                 'Date',
                                 'Day',
@@ -1019,8 +1035,6 @@ def submit():
                                 'Hours Rendered',
                                 'Undertime Hours',
                                 'Tardiness',
-                                'Excess of 8 hours Overtime',
-                                'Total of 8 hours Overtime',
                                 'RestDay Overtime for the 1st 8hrs',
                                 'Rest Day Overtime in Excess of 8hrs',
                                 'Special Holiday',
@@ -1048,7 +1062,10 @@ def submit():
     #Employee inputs
     employee_name = request.form.get('employee_name').upper()
     employee_code = request.form.get('employee_code').upper()
-    cost_center = request.form.get('cost_center')
+    position = request.form.get('position').upper()
+    location = request.form.get('location').upper()
+    cost_center = request.form.get('cost_center').upper()
+
 
 
     #Date of transaction
@@ -1093,7 +1110,7 @@ def submit():
     actual_time_out1 = datetime.strptime(request.form.get('actual_time_out'), "%H:%M").time()
     actual_time_out = actual_time_out1.strftime("%H:%M")
 
-    calculate_timeanddate(employee_name, employee_code, cost_center, day_of_week, date_transact1, date_obj, work_descript, second_descript, time_in, time_out, time_in1, time_out1, actual_time_in, actual_time_out, actual_time_in1, actual_time_out1)
+    calculate_timeanddate(employee_name, employee_code, position, location, cost_center, day_of_week, date_transact1, date_obj, work_descript, second_descript, time_in, time_out, time_in1, time_out1, actual_time_in, actual_time_out, actual_time_in1, actual_time_out1)
 
 
     # Pass the HTML table to the template
@@ -1146,8 +1163,6 @@ def table():
                                     'Hours Rendered': [df['Hours Rendered'].sum()],
                                     'Undertime Hours': [df['Undertime Hours'].sum()],
                                     'Tardiness': [df['Tardiness'].sum()],
-                                    'Excess of 8 hours Overtime': [df['Excess of 8 hours Overtime'].sum()],
-                                    'Total of 8 hours Overtime': [df['Total of 8 hours Overtime'].sum()],
                                     'RestDay Overtime for the 1st 8hrs': [df['RestDay Overtime for the 1st 8hrs'].sum()],
                                     'Rest Day Overtime in Excess of 8hrs': [df['Rest Day Overtime in Excess of 8hrs'].sum()],
                                     'Special Holiday': [df['Special Holiday'].sum()],
@@ -1243,17 +1258,18 @@ def download():
     # Step 4: Compute overtime for each employee
     for (name, cost_center), employee_df in grouped_df:
         employee_code = employee_df['Employee Code'].iloc[0]
+        location = employee_df['Location'].iloc[0]
+        position = employee_df['Position'].iloc[0]
         status = employee_df['Status']
 
         # Check if the status is not approved and set overtime to 0
-        if 'Not Approved' in status.values:
-            employee_df.loc[status == 'Not Approved', 'Total of 8 hours Overtime'] = 0
-            employee_df.loc[status == 'Not Approved', 'Excess of 8 hours Overtime'] = 0
+        # if 'Not Approved' in status.values:
+        #     employee_df.loc[status == 'Not Approved', 'Overtime'] = 0
 
 
-        total_working_days = employee_df.loc[(employee_df['Work Description'] == 'REGULAR DAY') & (employee_df['Secondary Description'] == 'REGULAR'), 'Working Day'].sum()
-        working_hours1 = employee_df.loc[(employee_df['Work Description'] == 'REGULAR DAY') & (employee_df['Secondary Description'] == 'REGULAR'), 'Hours Rendered'].sum()
-        tardiness1 = employee_df.loc[(employee_df['Work Description'] == 'REGULAR DAY') & (employee_df['Secondary Description'] == 'REGULAR'), 'Tardiness'].sum()
+        total_working_days = employee_df.loc[(employee_df['Secondary Description'] == 'REGULAR DAY') & (employee_df['Work Description'] == 'REGULAR'), 'Working Day'].sum()
+        working_hours1 = employee_df.loc[(employee_df['Secondary Description'] == 'REGULAR DAY') & (employee_df['Work Description'] == 'REGULAR'), 'Hours Rendered'].sum()
+        tardiness1 = employee_df.loc[(employee_df['Secondary Description'] == 'REGULAR DAY') & (employee_df['Work Description'] == 'REGULAR'), 'Tardiness'].sum()
         RegularDay_Overtime = employee_df['Overtime'].sum()
         RegularDay_Overtime_Excess = 0
         RegularDay_RestDay = 0
@@ -1270,19 +1286,22 @@ def download():
         legalholiday_RestDay_Overtime = employee_df['Legal Holiday Falling on Rest Day_1st 8hrs'].sum()
         legalholiday_RestDay_Overtime_Excess = employee_df['Legal Holiday Falling on Rest Day_Excess of 8hrs'].sum()
         RegularDay_Night_8hours = employee_df['Night Differential Regular Days_1st 8hrs'].sum()
-        RegularDay_Night_8hours_Excess = employee_df['Night Differential Falling on Rest Day_1st 8hrs'].sum()
-        RegularDay_RestDay_Night_8hours = employee_df['Night Differential Falling on Rest Day_Excess of 8hrs'].sum()
-        RegularDay_RestDay_Night_8hours_Excess = employee_df['Night Differential falling on Special Holiday'].sum()
+        RegularDay_Night_8hours_Excess = employee_df['Night Differential Regular Days_Excess of 8hrs'].sum()
+        RegularDay_RestDay_Night_8hours = employee_df['Night Differential Falling on Rest Day_1st 8hrs'].sum()
+        RegularDay_RestDay_Night_8hours_Excess = employee_df['Night Differential Falling on Rest Day_Excess of 8hrs'].sum()
         Specialholiday_RestDay_Night_8hours = employee_df['Night Differential Falling on SPHOL rest day 1st 8 hr'].sum()
         Specialholiday_RestDay_Night_8hours_Excess = employee_df['Night Differential SH falling on RD_EX8'].sum()
-        legalholiday_Night_diffence = employee_df['Night Differential on Legal Holidays falling on Rest Days'].sum()
+        legalholiday_rest_Night_diffence = employee_df['Night Differential on Legal Holidays falling on Rest Days'].sum()
         legalholiday_Night_8hours = employee_df['Night Differential on Legal Holidays_1st 8hrs'].sum()
         legalholiday_Night_8hours_Excess = employee_df['Night Differential on Legal Holidays_Excess of 8hrs'].sum()
-        Specialholiday_Night_diffence = employee_df['Night Differential Falling on SPHOL rest day 1st 8 hr'].sum()
+        Specialholiday_Night_diffence = employee_df['Night Differential falling on Special Holiday'].sum()
         Specialholiday_Night_8hours_Excess = employee_df['Night Differential SH_EX8'].sum()
+
 
         new_df = pd.DataFrame({'Employee_Code': [employee_code],
                                'Employee_Name': [name],
+                               'Position': [position],
+                               'Location': [location],
                                'Cost Center': [cost_center],
                                'No. of Working Days': [total_working_days],
                                'Number of Working Hours': [working_hours1],
@@ -1308,7 +1327,7 @@ def download():
                                 'Night Differential Falling on Rest Day_Excess of 8hrs': [RegularDay_RestDay_Night_8hours_Excess],
                                 'Night Differential Falling on SPHOL rest day 1st 8 hr': [Specialholiday_RestDay_Night_8hours],
                                 'Night Differential SH falling on RD_EX8':[Specialholiday_RestDay_Night_8hours_Excess],
-                                'Night Differential on Legal Holidays falling on Rest Days':[legalholiday_Night_diffence],
+                                'Night Differential on Legal Holidays falling on Rest Days':[legalholiday_rest_Night_diffence],
                                 'Night Differential on Legal Holidays_1st 8hrs':[legalholiday_Night_8hours],
                                 'Night Differential on Legal Holidays_Excess of 8hrs':[legalholiday_Night_8hours_Excess],
                                 'Night Differential falling on Special Holiday':[Specialholiday_Night_diffence],
@@ -1320,6 +1339,8 @@ def download():
 
             existing_df = pd.DataFrame(columns=['Employee_Code',
                                                 'Employee_Name',
+                                                'Position',
+                                                'Location',
                                                 'Cost Center',
                                                 'No. of Working Days',
                                                 'Number of Working Hours',
@@ -1362,6 +1383,8 @@ def download():
     except FileNotFoundError:
         dfexcel = pd.DataFrame(columns=['Employee_Code',
                                             'Employee_Name',
+                                            'Position',
+                                            'Location',
                                             'Cost Center',
                                             'No. of Working Days',
                                             'Number of Working Hours',
@@ -1395,6 +1418,7 @@ def download():
                                             'Night Differential SH_EX8'
                                             ])
 
+
     # Step 2: Load the existing Excel file
     template_file_path = 'excel_temp.xlsx'  # Replace with the path to your template Excel file
     template_wb = load_workbook(template_file_path)
@@ -1405,6 +1429,8 @@ def download():
     cell_mapping = {
         'Employee_Code': 'A6',
         'Employee_Name': 'B6',
+        'Location': 'D6',
+        'Position': 'F6',
         'Cost Center': 'G6',
         'No. of Working Days': 'J6',
         'Number of Working Hours': 'K6',
