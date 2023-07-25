@@ -85,17 +85,17 @@
                 <table class="table table-striped" id="table">
                     <thead>
                         <tr>
-                            <th>Action</th>
+                            <!-- <th>Action</th> -->
                             {% for key in data[0].keys() %}
                             <th>{{ key }}</th>
                             {% endfor %}
                         </tr>
                     </thead>
                     <tbody>
-                        <form method="POST" action="{{ url_for('save_all_rows') }}">
+                        <form method="POST">
                         {% for row in data %}
                         <tr>
-                            {% if row['Overtime'] > 0.0000000000 %}
+                            <!-- {% if row['Overtime'] > 0.0000000000 %}
                             <td class="highlight">
                                 <select name="status_{{ loop.index0 }}">
                                     <option value="Not Approved" {% if row['Status'] == 'Not Approved' %} selected {% endif %}>Not Approved</option>
@@ -104,16 +104,16 @@
                             </td>
                             {% else %}
                             <td></td>
-                            {% endif %}
+                            {% endif %} -->
 
                             {% for key, val in row.items() %}
                             <td {% if row['Overtime'] > 0.0000000000 %} class="highlight" {% endif %}>{{ val }}</td>
                             {% endfor %}
                         </tr>
                         {% endfor %}
-                            <form colspan="{{ data[0]|length + 1 }}">
+                            <!-- <form colspan="{{ data[0]|length + 1 }}">
                                 <button type="submit" class="float">Save All</button>
-                            </form>
+                            </form> -->
                         </form>
                     </tbody>
                 </table>

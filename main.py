@@ -31,8 +31,7 @@ def index():
     try:
         dtr = pd.read_csv('dtr.csv')
     except FileNotFoundError:
-        dtr = pd.DataFrame(columns=['Status',
-                                    'Overtime',
+        dtr = pd.DataFrame(columns=['Overtime',
                                     'Employee Code',
                                     'Employee Name',
                                     'Position',
@@ -46,7 +45,7 @@ def index():
                                     'Time Out',
                                     'Actual Time In',
                                     'Actual Time Out',
-                                    'Net Hours Rendered (Time Format)',
+                                    'Net Hours Render',
                                     'Actual Gross Hours Render',
                                     'Hours Rendered',
                                     'Undertime Hours',
@@ -135,6 +134,7 @@ def halfday(time_str, adjustment_hours):
 
     return adjusted_time_str
 
+
 def calculate_timeanddate(employee_name, employee_code, position, location, cost_center, day_of_week, date_transact1, date_obj, work_descript, second_descript, time_in, time_out, time_in1, time_out1, actual_time_in, actual_time_out, actual_time_in1, actual_time_out1):
 
     #TOTAL OF SCHEDULED TIME IN AND TIME OUT FOR LATE AND UNDERTIME HINDI PARA SA COMPUTATIONG NG OVERTIME
@@ -171,11 +171,12 @@ def calculate_timeanddate(employee_name, employee_code, position, location, cost
     undertime_check_try = 0
     if second_descript == "REGULAR DAY":
 
-        check_halfday = actual_datetime_timein0 - datetime_timein0
+        check_halfday = datetime_timeout0 - actual_datetime_timein0
         check_halfday = timedelta_to_decimal(check_halfday)
+        print(check_halfday)
 
 
-        if check_halfday > 2:
+        if check_halfday < 5:
             time_in1 = str(time_in1)
             time_in1 = halfday(time_in1, 5)
             time_in1 = datetime.strptime(str(time_in1), "%H:%M:%S").time()
@@ -207,7 +208,7 @@ def calculate_timeanddate(employee_name, employee_code, position, location, cost
 
         #UNDERTIME HOURS
 
-        if second_descript == 'REGULAR' and work_descript == 'REGULAR DAY':
+        if second_descript == 'REGULAR DAY' and work_descript == 'REGULAR':
             if actual_datetime_timeout0 < datetime_timeout0:
                 undertime_check_try = datetime_timeout0 - actual_datetime_timeout0
                 undertime_check_try = timedelta_to_decimal(undertime_check_try)
@@ -285,7 +286,7 @@ def calculate_timeanddate(employee_name, employee_code, position, location, cost
     # ===============================================================
     actual_datetime_timein = datetime.combine(date_obj.date(), actual_time_in1)
 
-    if actual_time_in1 > actual_time_out1:
+    if actual_time_in1 >= actual_time_out1:
         actual_add_day = timedelta(days=1)
         actual_new_day = date_obj.date() + actual_add_day
         actual_datetime_timeout = datetime.combine(actual_new_day, actual_time_out1)
@@ -299,8 +300,8 @@ def calculate_timeanddate(employee_name, employee_code, position, location, cost
         if diff < 1:
             actual_datetime_timeout = datetime_timeout
 
-    print(f"IN: {actual_time_in1} of {employee_name}")
-    print(f"OUT: {actual_time_out1} of {employee_name}")
+    print(f"IN: {actual_datetime_timein} of {employee_name}")
+    print(f"OUT: {actual_datetime_timeout} of {employee_name}")
 
     # ITO YUNG TOTAL BOSS
     total_actual_datetime_in_out = actual_datetime_timeout - actual_datetime_timein
@@ -334,10 +335,20 @@ def calculate_timeanddate(employee_name, employee_code, position, location, cost
 
     actual_render = 0
     if total_actual_datetime_in_out_int > 0:
-        actual_render = total_actual_datetime_in_out - non_chargeable_break_timedelta
-        actual_render = timedelta_to_decimal(actual_render)
-        actual_render = "{:.2f}".format(actual_render)
-        actual_render = float(actual_render)
+
+        net_hours_rendered = total_datetime_in_out - non_chargeable_break_timedelta
+        net_hours_rendered_str = timedelta_to_decimal(net_hours_rendered)
+
+        if actual_datetime_timein >= datetime_timeout or actual_datetime_timeout <= datetime_timein:
+            actual_render = total_actual_datetime_in_out
+            actual_render = timedelta_to_decimal(actual_render)
+            actual_render = "{:.2f}".format(actual_render)
+            actual_render = float(actual_render)
+        else:
+            actual_render = total_actual_datetime_in_out - non_chargeable_break_timedelta
+            actual_render = timedelta_to_decimal(actual_render)
+            actual_render = "{:.2f}".format(actual_render)
+            actual_render = float(actual_render)
 
 
     elif work_descript == 'LEGAL HOLIDAY' and total_actual_datetime_in_out_int == 0:
@@ -351,9 +362,16 @@ def calculate_timeanddate(employee_name, employee_code, position, location, cost
     #=====================================================================
     # HOURS RENDERED
 
-    hour_rendered = total_actual_datetime_in_out - non_chargeable_break_timedelta
-    hour_rendered_str = timedelta_to_decimal(hour_rendered)
-    hour_rendered_str = int(hour_rendered_str)
+    if actual_datetime_timein >= datetime_timeout or actual_datetime_timeout <= datetime_timein:
+        hour_rendered = total_actual_datetime_in_out
+        hour_rendered_str = timedelta_to_decimal(hour_rendered)
+        hour_rendered_str = int(hour_rendered_str)
+    else:
+        hour_rendered = total_actual_datetime_in_out - non_chargeable_break_timedelta
+        hour_rendered_str = timedelta_to_decimal(hour_rendered)
+        hour_rendered_str = int(hour_rendered_str)
+
+
 
 
     if work_descript == 'LEGAL HOLIDAY' or work_descript == 'SPECIAL HOLIDAY' and total_actual_datetime_in_out_int == 0 and total_datetime_in_out_int == 0:
@@ -441,12 +459,13 @@ def calculate_timeanddate(employee_name, employee_code, position, location, cost
             print("Pumasok sa Night Difference condition 3")
 
         #Para sa overtime na pinutol sa regular hours
-        if actual_datetime_timein > datetime_timeout or actual_datetime_timeout < datetime_timein:
+        if actual_datetime_timein >= datetime_timeout or actual_datetime_timeout <= datetime_timein:
             print("Pumasok sa overtime na pinutol sa regular hours")
 
             undertime_check_try = 0
             workingday = 0
             tardiness_str = 0
+            net_hours_rendered_str = 0
             overtime = total_actual_datetime_in_out_int
 
 
@@ -454,7 +473,12 @@ def calculate_timeanddate(employee_name, employee_code, position, location, cost
             if actual_datetime_timeout > datetime_start_night:
                 Night_diff = actual_datetime_timeout - datetime_start_night
                 Night_diff = timedelta_to_decimal(Night_diff)
-                ND_regular_days_excess_8_hrs1 = overtime - Night_diff
+                ND_regular_days_excess_8_hrs1 = Night_diff
+
+            elif actual_datetime_timein > datetime_end_night_before1:
+                Night_diff = datetime_end_night_before1 - actual_datetime_timein
+                Night_diff = timedelta_to_decimal(Night_diff)
+                ND_regular_days_excess_8_hrs1 = Night_diff
 
 
 
@@ -480,11 +504,19 @@ def calculate_timeanddate(employee_name, employee_code, position, location, cost
                     Night_diff = actual_datetime_timeout - datetime_start_night
                     ND_regular_days_excess_8_hrs = timedelta_to_decimal(Night_diff)
 
+                    if actual_datetime_timein < datetime_end_night_before1:
+                        print("Night Difference within the Regular Overtime early in")
+                        Night_diff1 = datetime_end_night_before1 - actual_datetime_timein
+                        Night_diff1 = timedelta_to_decimal(Night_diff1)
+                        ND_regular_days_excess_8_hrs1 = Night_diff1 + ND_regular_days_excess_8_hrs1
+
                 elif actual_datetime_timein < datetime_end_night_before1:
                     print("Night Difference within the Regular Overtime early in")
                     Night_diff = datetime_end_night_before1 - actual_datetime_timein
                     Night_diff = timedelta_to_decimal(Night_diff)
                     ND_regular_days_excess_8_hrs1 = Night_diff
+
+
 
 
 
@@ -517,12 +549,17 @@ def calculate_timeanddate(employee_name, employee_code, position, location, cost
                 excess_ND = timedelta_to_decimal(excess_ND)
                 excess_diff = excess_ND - Night_diff
 
-                ND_regular_days_RD_excess_8_hrs = excess_diff
+                if ND_regular_days_RD_1st_8_hrs >= 8:
+                    ND_regular_days_RD_excess_8_hrs = excess_diff
                 ND_regular_days_RD_1st_8_hrs = Night_diff
 
             if actual_datetime_timein < datetime_end_night_before1:
                 ND_regular_days_RD_1st_8_hrs = datetime_end_night_before1 - actual_datetime_timein
                 ND_regular_days_RD_1st_8_hrs = timedelta_to_decimal(ND_regular_days_RD_1st_8_hrs)
+
+                if actual_datetime_timeout > datetime_start_night:
+                    ND_regular_days_RD_excess_8_hrs = actual_datetime_timeout - datetime_start_night
+                    ND_regular_days_RD_excess_8_hrs = timedelta_to_decimal(ND_regular_days_RD_excess_8_hrs)
 
         elif actual_render <= 8:
             restday_ot_first_8 = actual_render
@@ -584,6 +621,10 @@ def calculate_timeanddate(employee_name, employee_code, position, location, cost
                     ND_legal_holiday_1st_8_hrs = datetime_end_night_before1 - actual_datetime_timein
                     ND_legal_holiday_1st_8_hrs = timedelta_to_decimal(ND_legal_holiday_1st_8_hrs)
 
+                    if actual_datetime_timeout > datetime_start_night:
+                        ND_legal_holiday_excess_8_hrs = actual_datetime_timeout - datetime_start_night
+                        ND_legal_holiday_excess_8_hrs = timedelta_to_decimal(ND_legal_holiday_excess_8_hrs)
+
 
 
 
@@ -635,6 +676,10 @@ def calculate_timeanddate(employee_name, employee_code, position, location, cost
                 if actual_datetime_timein < datetime_end_night_before1:
                     ND_legal_holiday_RD_1st_8_hrs = datetime_end_night_before1 - actual_datetime_timein
                     ND_legal_holiday_RD_1st_8_hrs = timedelta_to_decimal(ND_legal_holiday_RD_1st_8_hrs)
+
+                    if actual_datetime_timeout > datetime_start_night:
+                        ND_legal_holiday_RD_excess_8_hrs = actual_datetime_timeout - datetime_start_night
+                        ND_legal_holiday_RD_excess_8_hrs = timedelta_to_decimal(ND_legal_holiday_RD_excess_8_hrs)
 
             elif actual_render <= 8:
 
@@ -693,6 +738,10 @@ def calculate_timeanddate(employee_name, employee_code, position, location, cost
                     ND_special_holiday_1st_8_hrs = datetime_end_night_before1 - actual_datetime_timein
                     ND_special_holiday_1st_8_hrs = timedelta_to_decimal(ND_special_holiday_1st_8_hrs)
 
+                    if actual_datetime_timeout > datetime_start_night:
+                        ND_special_holiday_excess_8_hrs = actual_datetime_timeout - datetime_start_night
+                        ND_special_holiday_excess_8_hrs = timedelta_to_decimal(ND_special_holiday_excess_8_hrs)
+
 
             elif actual_render <= 8:
                 special_holiday_1st_8 = actual_render
@@ -741,6 +790,10 @@ def calculate_timeanddate(employee_name, employee_code, position, location, cost
                 if actual_datetime_timein < datetime_end_night_before1:
                     ND_special_holiday_RD_1st_8_hrs = datetime_end_night_before1 - actual_datetime_timein
                     ND_special_holiday_RD_1st_8_hrs = timedelta_to_decimal(ND_special_holiday_RD_1st_8_hrs)
+
+                    if actual_datetime_timeout > datetime_start_night:
+                        ND_special_holiday_RD_excess_8_hrs = actual_datetime_timeout - datetime_start_night
+                        ND_special_holiday_RD_excess_8_hrs = timedelta_to_decimal(ND_special_holiday_RD_excess_8_hrs)
 
 
             elif actual_render <= 8:
@@ -792,18 +845,17 @@ def calculate_timeanddate(employee_name, employee_code, position, location, cost
 
 
     #=====================================================================
-    # Approval
-    status_OT = 'No OT'
-    if overtime >= 1:
-        status_OT = 'Not Approved'
-    elif work_descript == 'REGULAR DAY' and overtime == 0:
-        status_OT = 'No OT'
-    elif work_descript == 'LEGAL HOLIDAY' or work_descript == 'SPECIAL HOLIDAY' and overtime == 0:
-        status_OT = 'Holiday'
+    # # Approval
+    # status_OT = 'No OT'
+    # if overtime >= 1:
+    #     status_OT = 'Not Approved'
+    # elif work_descript == 'REGULAR DAY' and overtime == 0:
+    #     status_OT = 'No OT'
+    # elif work_descript == 'LEGAL HOLIDAY' or work_descript == 'SPECIAL HOLIDAY' and overtime == 0:
+    #     status_OT = 'Holiday'
 
     # Encoding of inputs to the dataframe
-    dtr_new = pd.DataFrame({'Status': [status_OT],
-                            'Overtime': [overtime],
+    dtr_new = pd.DataFrame({'Overtime': [overtime],
                             'Employee Code': [employee_code],
                             'Employee Name': [employee_name],
                             'Position': [position],
@@ -818,7 +870,7 @@ def calculate_timeanddate(employee_name, employee_code, position, location, cost
                             'Time Out': [time_out],
                             'Actual Time In': [actual_time_in],
                             'Actual Time Out': [actual_time_out],
-                            'Net Hours Rendered (Time Format)': [net_hours_rendered_str],
+                            'Net Hours Render': [net_hours_rendered_str],
                             'Actual Gross Hours Render': [actual_render],
                             'Hours Rendered': [hour_rendered_str],
                             'Undertime Hours': [undertime_check_try],
@@ -851,8 +903,7 @@ def calculate_timeanddate(employee_name, employee_code, position, location, cost
     try:
         dtr = pd.read_csv('dtr.csv')
     except FileNotFoundError:
-        dtr = pd.DataFrame(columns=['Status',
-                                    'Overtime',
+        dtr = pd.DataFrame(columns=['Overtime',
                                     'Employee Code',
                                     'Employee Name',
                                     'Position',
@@ -867,7 +918,7 @@ def calculate_timeanddate(employee_name, employee_code, position, location, cost
                                     'Time Out',
                                     'Actual Time In',
                                     'Actual Time Out',
-                                    'Net Hours Rendered (Time Format)',
+                                    'Net Hours Render',
                                     'Actual Gross Hours Render',
                                     'Hours Rendered',
                                     'Undertime Hours',
@@ -896,8 +947,73 @@ def calculate_timeanddate(employee_name, employee_code, position, location, cost
                                     'Night Differential on Legal Holidays_Excess of 8hrs',
                                     'Night Differential on Legal Holidays falling on Rest Days'])
 
+
+
     dtr = pd.concat([dtr, dtr_new], ignore_index=True)
+
     dtr.to_csv('dtr.csv', index=False)
+
+    # Read the existing CSV file
+    rdtr = pd.read_csv('dtr.csv')
+
+    # Get the index of the last row in the DataFrame
+    last_row_index = rdtr.index[-1]
+    originalLegal = rdtr.loc[last_row_index, 'Legal Holiday_1st 8hours']
+    originalSpecial = rdtr.loc[last_row_index, 'Special Holiday_1st 8hours']
+    originalRest = rdtr.loc[last_row_index, 'RestDay Overtime for the 1st 8hrs']
+
+
+    # Iterate over unique dates in the 'Date' column
+    for date in rdtr['Date'].unique():
+        employee_df = rdtr[rdtr['Date'] == date]
+        checklegal = employee_df['Legal Holiday_1st 8hours'].sum()
+        checkspecial = employee_df['Special Holiday_1st 8hours'].sum()
+        checkrest = employee_df['RestDay Overtime for the 1st 8hrs'].sum()
+
+
+
+
+        if checklegal > 8:
+            excess_legal = checklegal - 8
+            first_8_legal = originalLegal - excess_legal
+
+            print('++++++++++++++++++++++++++++++++++++++++++')
+            print(excess_legal)
+            print(first_8_legal)
+            print('++++++++++++++++++++++++++++++++++++++++++')
+
+            # Update the values of the last row
+            rdtr.loc[last_row_index, 'Legal Holiday_1st 8hours'] = first_8_legal
+            rdtr.loc[last_row_index, 'Legal Holiday_Excess of 8hrs'] = excess_legal
+
+        if checkspecial > 8:
+            excess_special = checkspecial - 8
+            first_8_special = originalSpecial - excess_special
+
+            print('++++++++++++++++++++++++++++++++++++++++++')
+            print(excess_special)
+            print(first_8_special)
+            print('++++++++++++++++++++++++++++++++++++++++++')
+
+            # Update the values of the last row
+            rdtr.loc[last_row_index, 'Special Holiday_1st 8hours'] = first_8_special
+            rdtr.loc[last_row_index, 'Special Holiday_Excess of 8hrs'] = excess_special
+
+        if checkrest > 8:
+            excess_rest = checkrest - 8
+            first_8_rest = originalRest - excess_rest
+
+            print('++++++++++++++++++++++++++++++++++++++++++')
+            print(excess_rest)
+            print(first_8_rest)
+            print('++++++++++++++++++++++++++++++++++++++++++')
+
+            # Update the values of the last row
+            rdtr.loc[last_row_index, 'RestDay Overtime for the 1st 8hrs'] = first_8_rest
+            rdtr.loc[last_row_index, 'Rest Day Overtime in Excess of 8hrs'] = excess_rest
+
+    # Save the updated DataFrame to the CSV file
+    rdtr.to_csv('dtr.csv', index=False)
 
     return dtr
 
@@ -909,8 +1025,7 @@ def upload():
         # Read the Excel file into a pandas dataframe
         df = pd.read_excel(uploaded_file, header=[0], engine='openpyxl')
 
-        dtr = pd.DataFrame(columns=['Status',
-                                    'Overtime',
+        dtr = pd.DataFrame(columns=['Overtime',
                                     'Employee Code',
                                     'Employee Name',
                                     'Position',
@@ -925,7 +1040,7 @@ def upload():
                                     'Time Out',
                                     'Actual Time In',
                                     'Actual Time Out',
-                                    'Net Hours Rendered (Time Format)',
+                                    'Net Hours Render',
                                     'Actual Gross Hours Render',
                                     'Hours Rendered',
                                     'Undertime Hours',
@@ -996,15 +1111,26 @@ def upload():
 
             # Description inputs
             work_descript = row['Work Description'].upper()
-            # if work_descript.upper() == 'REGULAR':
-            #     work_descript = 'REGULAR'
-            # elif work_descript.upper() == 'REST DAY':
-            #     work_descript = 'REST DAY'
-            # else:
-            #     error_message = f"Invalid value {work_descript} in the Work Description column. Allowed values are regular day, legal holiday, and special holiday."
-            #     return render_template('index.html', error_message=error_message)
+            if work_descript.upper() == 'REGULAR':
+                work_descript = 'REGULAR'
+            elif work_descript.upper() == 'REST DAY':
+                work_descript = 'REST DAY'
+            else:
+                error_message = f"Invalid value {work_descript} in the Work Description column in Employee {employee_name}, date {date_transact1}. Allowed values are REGULAR and, REST DAY."
+                return render_template('index.html', error_message=error_message)
 
             second_descript = row['Secondary Description'].upper()
+            if second_descript.upper() == 'REGULAR DAY':
+                second_descript = 'REGULAR DAY'
+            elif second_descript.upper() == 'REST DAY':
+                second_descript = 'REST DAY'
+            elif second_descript.upper() == 'LEGAL HOLIDAY':
+                second_descript = 'LEGAL HOLIDAY'
+            elif second_descript.upper() == 'SPECIAL HOLIDAY':
+                second_descript = 'SPECIAL HOLIDAY'
+            else:
+                error_message = f"Invalid value {second_descript} in the Secondary Description column in Employee {employee_name}, date {date_transact1}. Allowed values are REGULAR DAY, REST DAY, LEGAL HOLIDAY, and SPECIAL HOLIDAY."
+                return render_template('index.html', error_message=error_message)
 
             # Work Hours Inputs
             time_in1 = datetime.strptime(str(row['WS Time In']), "%H:%M:%S").time()
@@ -1023,13 +1149,11 @@ def upload():
                                   actual_time_in1, actual_time_out1)
 
 
-
-
         return render_template('index.html', dtr=dtr)
 
     except Exception as e:
         # Handle the exception and pass the error message to the template
-        error_message = "Error in the uploaded file. Please make sure the file format is correct and no missing values."
+        error_message = f"Error in the uploaded file. Please make sure the file format is correct and no missing values in ROW {i+2}."
         traceback.print_exc()  # Print the traceback for debugging purposes
         return render_template('index.html', error_message=error_message)
 
@@ -1038,8 +1162,7 @@ def upload():
 def submit():
 
     #Creating a new Dataframe (this serves as a database na rin)
-    dtr = pd.DataFrame(columns=['Status',
-                                'Overtime',
+    dtr = pd.DataFrame(columns=['Overtime',
                                 'Employee Code',
                                 'Employee Name',
                                 'Position',
@@ -1054,7 +1177,7 @@ def submit():
                                 'Time Out',
                                 'Actual Time In',
                                 'Actual Time Out',
-                                'Net Hours Rendered (Time Format)',
+                                'Net Hours Render',
                                 'Actual Gross Hours Render',
                                 'Hours Rendered',
                                 'Undertime Hours',
@@ -1182,7 +1305,7 @@ def table():
         # add new table with summary information
         summary = pd.DataFrame({'Overtime': [df['Overtime'].sum()],
                                 'Working Day': [df['Working Day'].sum()],
-                                    'Net Hours Rendered (Time Format)': [df['Net Hours Rendered (Time Format)'].sum()],
+                                    'Net Hours Render': [df['Net Hours Render'].sum()],
                                     'Actual Gross Hours Render': [df['Actual Gross Hours Render'].sum()],
                                     'Hours Rendered': [df['Hours Rendered'].sum()],
                                     'Undertime Hours': [df['Undertime Hours'].sum()],
@@ -1217,24 +1340,23 @@ def table():
     except FileNotFoundError:
         return render_template('table.html')
 
+# @app.route('/save_row', methods=['POST'])
+# def save_row():
+#     index = int(request.form['index'])
+#     status = request.form['status']
+#     df = pd.read_csv('dtr.csv')
+#     df.loc[index, 'Status'] = status
+#     df.to_csv('dtr.csv', index=False)
+#     return redirect(url_for('table'))
 
-@app.route('/save_row', methods=['POST'])
-def save_row():
-    index = int(request.form['index'])
-    status = request.form['status']
-    df = pd.read_csv('dtr.csv')
-    df.loc[index, 'Status'] = status
-    df.to_csv('dtr.csv', index=False)
-    return redirect(url_for('table'))
-
-@app.route('/save_all_rows', methods=['POST'])
-def save_all_rows():
-    df = pd.read_csv('dtr.csv')
-    for index, row in df.iterrows():
-        status = request.form.get(f'status_{index}')
-        df.loc[index, 'Status'] = status
-    df.to_csv('dtr.csv', index=False)
-    return redirect(url_for('table'))
+# @app.route('/save_all_rows', methods=['POST'])
+# def save_all_rows():
+#     df = pd.read_csv('dtr.csv')
+#     for index, row in df.iterrows():
+#         status = request.form.get(f'status_{index}')
+#         df.loc[index, 'Status'] = status
+#     df.to_csv('dtr.csv', index=False)
+#     return redirect(url_for('table'))
 
 @app.route('/checkcsv')
 def check_csv():
@@ -1284,7 +1406,7 @@ def download():
         employee_code = employee_df['Employee Code'].iloc[0]
         location = employee_df['Location'].iloc[0]
         position = employee_df['Position'].iloc[0]
-        status = employee_df['Status']
+        # status = employee_df['Status']
 
         # Check if the status is not approved and set overtime to 0
         # if 'Not Approved' in status.values:
