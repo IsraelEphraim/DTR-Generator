@@ -141,7 +141,7 @@ def calculate_timeanddate(employee_name, employee_code, position, location, cost
 
     #TOTAL OF SCHEDULED TIME IN AND TIME OUT FOR LATE AND UNDERTIME HINDI PARA SA COMPUTATIONG NG OVERTIME
     datetime_timein0 = datetime.combine(date_obj.date(), time_in1)
-    if time_in1 > time_out1:
+    if time_in1 >= time_out1:
         add_day = timedelta(days=1)
         new_day = date_obj.date() + add_day
         datetime_timeout0 = datetime.combine(new_day, time_out1)
@@ -157,7 +157,7 @@ def calculate_timeanddate(employee_name, employee_code, position, location, cost
     #FOR LATE AND UNDERTIME
     actual_datetime_timein0 = datetime.combine(date_obj.date(), actual_time_in1)
 
-    if actual_time_in1 > actual_time_out1:
+    if actual_time_in1 >= actual_time_out1:
         actual_add_day = timedelta(days=1)
         actual_new_day = date_obj.date() + actual_add_day
         actual_datetime_timeout0 = datetime.combine(actual_new_day, actual_time_out1)
@@ -181,10 +181,12 @@ def calculate_timeanddate(employee_name, employee_code, position, location, cost
             check_halfday = timedelta_to_decimal(check_halfday)
             check_halfday1 = actual_datetime_timeout0 - datetime_timein0
             check_halfday1 = timedelta_to_decimal(check_halfday1)
-            print(check_halfday)
+
+            print('date time in', datetime_timein0)
+            print('actual date time out', actual_datetime_timeout0)
 
 
-            if check_halfday < 5 or check_halfday1 <5:
+            if check_halfday < 5 or check_halfday1 < 5:
                 time_in2 = str(time_in1)
                 time_in2 = halfday(time_in2, 5)
                 time_in2 = datetime.strptime(str(time_in2), "%H:%M:%S").time()
@@ -1121,9 +1123,6 @@ def upload():
             time_in = time_in1.strftime("%H:%M")
             time_out1 = datetime.strptime(str(row['WS Time Out']), "%H:%M:%S").time()
             time_out = time_out1.strftime("%H:%M")
-
-            print(time_in1)
-            print(time_out1)
 
             # Actual Time in and out
             actual_time_in1 = datetime.strptime(str(row['Actual Time In']), "%H:%M:%S").time()
